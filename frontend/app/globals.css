@@ -20,7 +20,7 @@ body {
   background-image: url('/bg-polished.webp');
   background-size: cover;
   background-position: center;
-  filter: blur(8px) brightness(0.9);
+  filter: blur(8px) brightness(0.88);
   transform: scale(1.04);
   z-index: -3;
 }
@@ -28,7 +28,7 @@ body {
 .hero-overlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(20, 40, 60, 0.35) 0%, rgba(20, 40, 60, 0.25) 40%, rgba(20, 40, 60, 0.15) 100%);
+  background: linear-gradient(to bottom, rgba(25, 35, 28, 0.22) 0%, rgba(33, 52, 39, 0.25) 35%, rgba(24, 41, 31, 0.45) 100%);
   z-index: -2;
 }
 
@@ -103,4 +103,41 @@ body {
   background: #2563eb;
   color: #fff;
   border-color: #2563eb;
+}
+
+.top-nav {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 999px;
+}
+
+.hero-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+}
+
+.hero-tab {
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+}
+
+.hero-tab.active {
+  background: rgba(255,255,255,0.88);
+  color: #0f172a;
+}
+
+.hero-search-pill {
+  background: rgba(74, 108, 74, 0.55);
+  border: 1px solid rgba(210, 229, 200, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px;
 }

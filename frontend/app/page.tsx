@@ -107,9 +107,30 @@ export default function HomePage() {
       <div className="hero-overlay-warm" />
 
       <section className="mx-auto w-full max-w-6xl px-5 py-8 pb-16">
-        <div className="glass min-h-[72vh] p-6 md:p-8 flex flex-col justify-end mb-4">
-          <h1 className="text-white text-[clamp(40px,6vw,64px)] font-bold tracking-[-0.02em] leading-[1.02]">PointPilot</h1>
-          <p className="text-white/90 text-lg mt-2 max-w-2xl">Fly smarter with points you already have.</p>
+        <div className="glass min-h-[78vh] p-6 md:p-8 flex flex-col mb-4">
+          <div className="flex items-center justify-between">
+            <div className="text-white text-4xl font-semibold tracking-tight">pointpilot</div>
+            <button className="btn-primary">Sign up</button>
+          </div>
+
+          <div className="mt-10 text-center">
+            <div className="hero-tabs">
+              <span className="hero-tab active">Flights</span>
+              <span className="hero-tab">Hotels</span>
+            </div>
+          </div>
+
+          <div className="mt-auto">
+            <h1 className="text-white text-[clamp(46px,7vw,78px)] font-bold tracking-[-0.03em] leading-[0.96] max-w-4xl">
+              Free flights using points
+            </h1>
+            <p className="text-white/90 text-[clamp(24px,3vw,40px)] mt-4 max-w-2xl font-light">Book your dream vacation with points</p>
+
+            <div className="hero-search-pill mt-8 p-4 md:p-5 text-white">
+              <div className="text-3xl font-semibold tracking-wide">{origins[0] || 'JFK'} → {dests[0] || 'SFO'}</div>
+              <div className="text-white/85 text-lg mt-1">{start || 'Feb 22'} • Economy • 1 Traveler</div>
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-2 mb-4 items-center">
@@ -123,7 +144,7 @@ export default function HomePage() {
         </div>
 
         {step === 'search' && (
-          <form onSubmit={onSubmit} className="search-tray p-4 md:p-5 -mt-8 relative z-10">
+          <form onSubmit={onSubmit} className="search-tray p-4 md:p-5 mt-2 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="label">From airports</label>
