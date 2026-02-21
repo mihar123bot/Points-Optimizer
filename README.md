@@ -33,9 +33,10 @@ No auto-booking is performed.
   - friction components
   - score components
   - source timestamps/labels
-- Marriott hotel points threshold enforcement:
-  - points hotel mode only when hotel CPP >= 1.5¢/pt
-  - otherwise hotel defaults to cash mode for that option
+- CPP rule enforcement updated:
+  - points are considered only when CPP > 1.0 (flight and hotel)
+  - if both flight and hotel CPP are > 1.0, points are applied to the side with higher CPP
+  - the other side defaults to cash for that option
 - API mode status in UI:
   - `LIVE` when real provider data is used
   - `FALLBACK` when estimator/mock data is used
@@ -115,7 +116,7 @@ Current destination pool codes include: `CUN, PUJ, NAS, SJD, YVR, EZE, LIM, CDG,
    - blended CPP (capped)
    - friction
    - composite score
-5. Enforce Marriott hotel points rule (`CPP >= 1.5`)
+5. Enforce CPP rule (`CPP > 1.0`) for both flight and hotel; when both pass, use points on higher CPP side
 6. Return winner tiles + ranked options
 
 ### Scoring model (MVP)

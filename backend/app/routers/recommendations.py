@@ -64,11 +64,29 @@ def generate_recommendations(req: GenerateRequest):
 
         cpp_flight = ((cash_flight - taxes_fees) / max(flight_points_required, 1)) * 100.0
         cpp_hotel = ((hotel_cash - hotel_fees_on_points) / max(hotel_points_required, 1)) * 100.0
-        marriott_cpp_eligible = cpp_hotel >= 1.5
 
-        hotel_cash_component = 0.0 if marriott_cpp_eligible else hotel_cash
-        hotel_mode = "points" if marriott_cpp_eligible else "cash"
-        oop_total = round(taxes_fees + hotel_cash_component, 2)
+        cpp_threshold = 1.0
+        flight_cpp_ok = cpp_flight > cpp_threshold
+        hotel_cpp_ok = cpp_hotel > cpp_threshold
+
+        if flight_cpp_ok and hotel_cpp_ok:
+            use_points_for = "flight" if cpp_flight >= cpp_hotel else "hotel"
+        elif flight_cpp_ok:
+            use_points_for = "flight"
+        elif hotel_cpp_ok:
+            use_points_for = "hotel"
+        else:
+            use_points_for = "none"
+
+        if use_points_for == "flight":
+            oop_total = round(taxes_fees + hotel_cash, 2)
+        elif use_points_for == "hotel":
+            oop_total = round(cash_flight + hotel_fees_on_points, 2)
+        else:
+            oop_total = round(cash_flight + hotel_cash, 2)
+
+        hotel_mode = "points" if use_points_for == "hotel" else "cash"
+        marriott_cpp_eligible = hotel_cpp_ok
 
         cpp_blended = min(round((cpp_flight + max(cpp_hotel, 0.0)) / 2.0, 2), 5.0)
         friction_components = {
@@ -103,6 +121,8 @@ def generate_recommendations(req: GenerateRequest):
             "suggested_flight_program": suggested_flight_program,
             "marriott_cpp_eligible": marriott_cpp_eligible,
             "hotel_booking_mode": hotel_mode,
+            "points_strategy": use_points_for,
+            "cpp_threshold": cpp_threshold,
             "as_of": now,
         }
 
@@ -118,7 +138,7 @@ def generate_recommendations(req: GenerateRequest):
                 rationale=[
                     f"{c['stops']} stop(s)",
                     f"{c['travel_hours']}h total travel",
-                    f"Hotel booking mode: {hotel_mode}",
+                    f"Points strategy: {use_points_for}",
                 ],
                 as_of=now,
                 points_breakdown={
@@ -127,11 +147,17 @@ def generate_recommendations(req: GenerateRequest):
                     "hotel_program": "MARRIOTT",
                     "hotel_points": hotel_points_required,
                     "taxes_fees": round(taxes_fees, 2),
+                    "flight_cpp": round(cpp_flight, 3),
+                    "hotel_cpp": round(cpp_hotel, 3),
+                    "cpp_threshold": cpp_threshold,
+                    "points_strategy": use_points_for,
                 },
                 friction_components=friction_components,
                 score_components=score_components,
                 marriott_points_eligible=marriott_cpp_eligible,
                 hotel_booking_mode=hotel_mode,
+                points_strategy=use_points_for,
+                cpp_threshold=cpp_threshold,
                 source_timestamps={
                     "award": award["as_of"],
                     "airfare": airfare["as_of"],

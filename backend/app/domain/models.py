@@ -48,6 +48,8 @@ class RecommendationOption(BaseModel):
     score_components: dict = Field(default_factory=dict)
     marriott_points_eligible: bool = False
     hotel_booking_mode: str = "cash"
+    points_strategy: str = "none"
+    cpp_threshold: float = 1.0
     source_timestamps: dict = Field(default_factory=dict)
     source_labels: dict = Field(default_factory=dict)
     api_mode: str = "fallback"
