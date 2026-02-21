@@ -2,9 +2,9 @@ import uuid
 from typing import Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
+from app.store import load_alerts, save_alerts
 
 router = APIRouter()
-ALERTS: dict[str, dict] = {}
 
 
 class AlertCreate(BaseModel):
@@ -20,14 +20,16 @@ class AlertUpdate(BaseModel):
 
 @router.post('')
 def create_alert(payload: AlertCreate):
+    db = load_alerts()
     alert_id = str(uuid.uuid4())
-    ALERTS[alert_id] = {'id': alert_id, **payload.model_dump()}
-    return ALERTS[alert_id]
+    db[alert_id] = {'id': alert_id, **payload.model_dump()}
+    save_alerts(db)
+    return db[alert_id]
 
 
 @router.get('')
 def list_alerts(trip_search_id: Optional[str] = None):
-    vals = list(ALERTS.values())
+    vals = list(load_alerts().values())
     if trip_search_id:
         vals = [a for a in vals if a['trip_search_id'] == trip_search_id]
     return vals
@@ -35,9 +37,12 @@ def list_alerts(trip_search_id: Optional[str] = None):
 
 @router.patch('/{alert_id}')
 def update_alert(alert_id: str, payload: AlertUpdate):
-    item = ALERTS.get(alert_id)
+    db = load_alerts()
+    item = db.get(alert_id)
     if not item:
         return {'error': 'not_found'}
     for k, v in payload.model_dump(exclude_none=True).items():
         item[k] = v
+    db[alert_id] = item
+    save_alerts(db)
     return item

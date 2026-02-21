@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.domain.models import RecommendationBundle, RecommendationOption
 from app.services.scoring import blended_score
+from app.services.recommender import generate_destination_candidates
+from app.store import load_trip_searches
 
 router = APIRouter()
 
@@ -13,28 +15,50 @@ class GenerateRequest(BaseModel):
 
 @router.post('/generate', response_model=RecommendationBundle)
 def generate_recommendations(req: GenerateRequest):
+    trip_searches = load_trip_searches()
+    trip = trip_searches.get(req.trip_search_id)
+    if not trip:
+        raise HTTPException(404, "TripSearch not found")
+
+    payload = trip["payload"]
+    candidates = generate_destination_candidates(payload)
+    if not candidates:
+        raise HTTPException(422, "No destinations meet constraints")
+
     now = datetime.now(timezone.utc).isoformat()
-    options = [
-        RecommendationOption(
-            id='opt-1', destination='CUN', oop_total=980.0, cpp_flight=1.8, cpp_hotel=1.6,
-            cpp_blended_capped=1.7, score_final=blended_score(980.0, 1.7, 2.0),
-            rationale=['Low OOP', 'Direct options available'], as_of=now,
-        ),
-        RecommendationOption(
-            id='opt-2', destination='PUJ', oop_total=840.0, cpp_flight=1.5, cpp_hotel=1.7,
-            cpp_blended_capped=1.6, score_final=blended_score(840.0, 1.6, 2.5),
-            rationale=['Best OOP', '1 stop only'], as_of=now,
-        ),
-        RecommendationOption(
-            id='opt-3', destination='LIS', oop_total=1220.0, cpp_flight=2.2, cpp_hotel=1.4,
-            cpp_blended_capped=2.0, score_final=blended_score(1220.0, 2.0, 3.5),
-            rationale=['High flight CPP', 'Longer route'], as_of=now,
-        ),
-    ]
+    options = []
+    for i, c in enumerate(candidates[:8], start=1):
+        oop = round(700 + i * 120 + c["stops"] * 100 + c["travel_hours"] * 20, 2)
+        cpp_f = round(1.3 + (8 - i) * 0.1, 2)
+        cpp_h = round(1.4 + (i % 4) * 0.1, 2)
+        cpp_blended = min(round((cpp_f + cpp_h) / 2, 2), 5.0)
+        friction = c["stops"] * 2 + max(0, c["travel_hours"] - 7) * 0.5
+        score = blended_score(oop, cpp_blended, friction)
+        options.append(
+            RecommendationOption(
+                id=f"opt-{i}",
+                destination=c["code"],
+                oop_total=oop,
+                cpp_flight=cpp_f,
+                cpp_hotel=cpp_h,
+                cpp_blended_capped=cpp_blended,
+                score_final=score,
+                rationale=[
+                    f"{c['stops']} stop(s)",
+                    f"{c['travel_hours']}h total travel",
+                    "Transparent CPP/OOP scoring",
+                ],
+                as_of=now,
+            )
+        )
+
+    options_sorted = sorted(options, key=lambda x: x.score_final, reverse=True)
+    best_oop = min(options, key=lambda x: x.oop_total).id
+    best_cpp = max(options, key=lambda x: x.cpp_blended_capped).id
     winner_tiles = {
-        'best_oop': 'opt-2',
-        'best_cpp': 'opt-3',
-        'best_business': 'opt-3',
-        'best_balanced': max(options, key=lambda x: x.score_final).id,
+        'best_oop': best_oop,
+        'best_cpp': best_cpp,
+        'best_business': best_cpp,
+        'best_balanced': options_sorted[0].id,
     }
-    return RecommendationBundle(trip_search_id=req.trip_search_id, winner_tiles=winner_tiles, options=options)
+    return RecommendationBundle(trip_search_id=req.trip_search_id, winner_tiles=winner_tiles, options=options_sorted)
