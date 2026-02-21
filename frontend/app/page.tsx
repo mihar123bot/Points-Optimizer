@@ -106,14 +106,14 @@ export default function HomePage() {
       <div className="hero-overlay" />
       <div className="hero-overlay-warm" />
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-8 pb-16">
-        <div className="glass min-h-[78vh] p-6 md:p-8 flex flex-col mb-4">
+      <section className="mobile-shell w-full px-3 py-4 pb-12">
+        <div className="glass min-h-[74vh] p-4 flex flex-col mb-3">
           <div className="flex items-center justify-between">
             <div className="text-white text-4xl font-semibold tracking-tight">pointpilot</div>
             <button className="btn-primary">Sign up</button>
           </div>
 
-          <div className="mt-10 text-center">
+          <div className="mt-6 text-center">
             <div className="hero-tabs">
               <span className="hero-tab active">Flights</span>
               <span className="hero-tab">Hotels</span>
@@ -121,7 +121,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-auto">
-            <h1 className="text-white text-[clamp(46px,7vw,78px)] font-bold tracking-[-0.03em] leading-[0.96] max-w-4xl">
+            <h1 className="text-white text-[clamp(52px,13vw,82px)] font-bold tracking-[-0.03em] leading-[0.9] max-w-4xl">
               Free flights using points
             </h1>
             <p className="text-white/90 text-[clamp(24px,3vw,40px)] mt-4 max-w-2xl font-light">Book your dream vacation with points</p>

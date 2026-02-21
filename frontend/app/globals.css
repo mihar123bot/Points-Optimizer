@@ -14,6 +14,11 @@ body {
   background: #f8fbff;
 }
 
+.mobile-shell {
+  max-width: 430px;
+  margin: 0 auto;
+}
+
 .hero-bg {
   position: fixed;
   inset: 0;
@@ -145,7 +150,7 @@ body {
 .deals-shell {
   background: #f6f6f7;
   border-radius: 28px;
-  padding: 22px;
+  padding: 18px;
 }
 
 .deals-title {
@@ -179,4 +184,34 @@ body {
   font-weight: 600;
   background: #ff1973;
   box-shadow: 0 8px 20px rgba(255, 25, 115, 0.28);
+}
+
+@media (max-width: 640px) {
+  .glass {
+    border-radius: 22px;
+  }
+
+  .deals-shell {
+    border-radius: 22px;
+    padding: 14px;
+  }
+
+  .deal-card {
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .deals-title {
+    font-size: 52px;
+    line-height: 0.94;
+  }
+
+  .deals-sub {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+
+  .btn-primary {
+    height: 42px;
+  }
 }
