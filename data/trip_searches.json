@@ -1,0 +1,789 @@
+{
+  "040b3fc9-67c6-44da-9c34-930510e821de": {
+    "id": "040b3fc9-67c6-44da-9c34-930510e821de",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 13.98,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "0905db7e-d05f-4e31-ac1e-90264b213ed4": {
+    "id": "0905db7e-d05f-4e31-ac1e-90264b213ed4",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 13.98,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "0d607be8-71f2-455c-a1be-de681d66da2c": {
+    "id": "0d607be8-71f2-455c-a1be-de681d66da2c",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 13.98,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "21b4931f-9fc2-453f-8887-f7dd4197be10": {
+    "id": "21b4931f-9fc2-453f-8887-f7dd4197be10",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 13.98,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "25078091-124f-4148-8a85-5ff34f00e139": {
+    "id": "25078091-124f-4148-8a85-5ff34f00e139",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-07",
+      "date_window_start": "2026-05-18",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "warm beach"
+      ]
+    }
+  },
+  "45f73e4c-c9e5-4181-ac08-065954fa75aa": {
+    "id": "45f73e4c-c9e5-4181-ac08-065954fa75aa",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-02-21",
+      "date_window_start": "2026-02-21",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "537c65f4-c045-4199-bac1-3605e6abdafa": {
+    "id": "537c65f4-c045-4199-bac1-3605e6abdafa",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "64d58083-0d32-4609-9a0a-02efd6f5f0e0": {
+    "id": "64d58083-0d32-4609-9a0a-02efd6f5f0e0",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 13.98,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "69b7b6d6-848a-4606-bbc3-52fdf588e893": {
+    "id": "69b7b6d6-848a-4606-bbc3-52fdf588e893",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-06",
+      "date_window_start": "2026-07-01",
+      "duration_nights": 4,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "warm beach"
+      ]
+    }
+  },
+  "69bf77e2-5dfe-4288-be4e-6b1c09e6a22c": {
+    "id": "69bf77e2-5dfe-4288-be4e-6b1c09e6a22c",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 13.98,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 4,
+      "origins": [
+        "IAD"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "warm beach"
+      ]
+    }
+  },
+  "71c7c06b-ec08-4eb1-8c39-3bf57b93a5c2": {
+    "id": "71c7c06b-ec08-4eb1-8c39-3bf57b93a5c2",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-03-31",
+      "date_window_start": "2026-03-23",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "81256368-cca6-4094-8586-a381102c9baa": {
+    "id": "81256368-cca6-4094-8586-a381102c9baa",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-02-21",
+      "date_window_start": "2026-02-21",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "9301d150-83aa-4d3b-8b67-af607a538224": {
+    "id": "9301d150-83aa-4d3b-8b67-af607a538224",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-02-21",
+      "date_window_start": "2026-02-21",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "warm beach"
+      ]
+    }
+  },
+  "9b5b61ae-9cbb-4c05-a8d0-b76de4cfb1b8": {
+    "id": "9b5b61ae-9cbb-4c05-a8d0-b76de4cfb1b8",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-06",
+      "date_window_start": "2026-07-01",
+      "duration_nights": 4,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "warm beach"
+      ]
+    }
+  },
+  "ab87b933-c557-4088-ad28-5a3755c35a08": {
+    "id": "ab87b933-c557-4088-ad28-5a3755c35a08",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "b16de265-c0cc-4270-b6d8-bf92c40a4478": {
+    "id": "b16de265-c0cc-4270-b6d8-bf92c40a4478",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-07",
+      "date_window_start": "2026-07-01",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "warm beach"
+      ]
+    }
+  },
+  "b3f3615c-bc2d-4d69-9561-7a5bfb726320": {
+    "id": "b3f3615c-bc2d-4d69-9561-7a5bfb726320",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 50000,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-14",
+      "date_window_start": "2026-07-01",
+      "duration_nights": 5,
+      "origins": [
+        "IAD"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "warm beach"
+      ]
+    }
+  },
+  "c50fb73c-21b5-41f5-b92a-5cf7fcdb3dd2": {
+    "id": "c50fb73c-21b5-41f5-b92a-5cf7fcdb3dd2",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 50000,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-14",
+      "date_window_start": "2026-07-01",
+      "duration_nights": 5,
+      "origins": [
+        "IAD"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "warm beach"
+      ]
+    }
+  },
+  "dc40f7ea-ba9a-492f-b77a-a862d5de994a": {
+    "id": "dc40f7ea-ba9a-492f-b77a-a862d5de994a",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 13.98,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "dfbecb91-3b7d-4b10-893b-9a5b3b69ef2c": {
+    "id": "dfbecb91-3b7d-4b10-893b-9a5b3b69ef2c",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-06",
+      "date_window_start": "2026-07-01",
+      "duration_nights": 4,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "warm beach"
+      ]
+    }
+  },
+  "e3365e00-db7e-4015-bc43-b72fd9386451": {
+    "id": "e3365e00-db7e-4015-bc43-b72fd9386451",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  },
+  "ecfc59fb-d129-4cee-ae1f-da66ef4ddbaa": {
+    "id": "ecfc59fb-d129-4cee-ae1f-da66ef4ddbaa",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        },
+        {
+          "balance": 0,
+          "program": "MARRIOTT"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 13.98,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-04-08",
+      "date_window_start": "2026-03-19",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "travelers": 2,
+      "vibe_tags": [
+        "south america"
+      ]
+    }
+  }
+}
