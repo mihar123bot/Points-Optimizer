@@ -32,6 +32,12 @@ No auto-booking is performed.
 - Streamlit app (`app.py`) still exists for internal fallback/testing
 - Not the default UI anymore
 
+### Screenshots
+
+#### Desktop Home (current)
+
+![PointPilot Desktop Home](docs/screenshots/home-desktop.png)
+
 ---
 
 ## Architecture
