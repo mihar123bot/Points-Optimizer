@@ -2,25 +2,25 @@
 
 Semi-auto credit card points trip optimizer.
 
-## MVP Goals
-- Minimize out-of-pocket (OOP) for flight + hotel bundles
-- Maximize realistic CPP using transparent math
-- Generate a human-executable transfer + booking playbook (no auto-booking)
+## What you get now
+- FastAPI backend for Trip Search, Recommendations, Playbook, Alerts
+- Streamlit app UI as the output interface
+- Persistent local JSON storage for trip searches + alerts
+- Transparent OOP/CPP/friction scoring scaffold
 
-## Stack
-- Backend: FastAPI
-- Frontend: Next.js (placeholder scaffold in this repo)
-- Data: Postgres (planned), Redis cache (planned)
-- Jobs: scheduled refresh + alert checks
+## Quick start
 
-## Project Layout
-- `docs/ARCHITECTURE.md` — system design and data flow
-- `docs/API_CONTRACT.md` — MVP endpoints and payloads
-- `docs/CODEX_TASKLIST.md` — build checklist and acceptance criteria
-- `backend/` — FastAPI app + scoring + adapters
-- `frontend/` — Next.js placeholder app shell
+```bash
+cd Points-Optimizer
+./run.sh
+```
 
-## Run (backend dev)
+- Backend API: `http://localhost:8000/docs`
+- Streamlit App: `http://localhost:8502`
+
+## Manual run (optional)
+
+Backend:
 ```bash
 cd backend
 python3 -m venv .venv
@@ -29,9 +29,19 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-Open API docs at: `http://localhost:8000/docs`
+Frontend app:
+```bash
+cd ..
+pip install -r requirements.txt
+streamlit run app.py --server.port 8502
+```
 
-## Notes
-- Provider adapters are intentionally interface-first for clean swap-in.
-- Award/cash/hotel provider keys are env-based (`.env.example`).
-- Includes transparent score explainability fields in responses.
+## Project Layout
+- `app.py` — Streamlit app (main UI)
+- `backend/` — API + services + models + store
+- `docs/` — architecture, API contract, build tasklist
+
+## Next build targets
+- Real provider adapters (award + airfare + hotel)
+- Marriott CPP rule enforcement in hotel results
+- Saved-search alert evaluator jobs
