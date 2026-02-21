@@ -451,8 +451,8 @@ if "api_error" not in st.session_state:
 st.markdown(
     """
     <div class="hero">
-      <div style="font-size:1.25rem;font-weight:600;">PointsTrip Optimizer</div>
-      <div style="font-size:.92rem;color:#475569;">Simple, credible trip decisions with exportable playbooks.</div>
+      <div style="font-size:1.25rem;font-weight:600;">PointPilot</div>
+      <div style="font-size:.92rem;color:#475569;">Fly smarter with points you already have.</div>
     </div>
     """,
     unsafe_allow_html=True,

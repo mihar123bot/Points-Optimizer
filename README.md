@@ -1,6 +1,8 @@
-# PointsTrip Optimizer (MVP)
+# PointPilot (MVP)
 
-Semi-automated points trip optimizer for early rollout (friends/family).
+Fly smarter with points you already have.
+
+Semi-automated travel optimizer for early rollout (friends/family).
 
 This app helps a user:
 - search trip options,
