@@ -106,8 +106,8 @@ export default function HomePage() {
       <div className="hero-overlay" />
       <div className="hero-overlay-warm" />
 
-      <section className="mobile-shell w-full px-3 py-4 pb-12">
-        <div className="glass min-h-[74vh] p-4 flex flex-col mb-3">
+      <section className="mobile-shell w-full px-5 md:px-8 py-8 pb-16">
+        <div className="glass min-h-[72vh] p-6 md:p-8 flex flex-col mb-4">
           <div className="flex items-center justify-between">
             <div className="text-white text-4xl font-semibold tracking-tight">pointpilot</div>
             <button className="btn-primary">Sign up</button>
@@ -184,10 +184,22 @@ export default function HomePage() {
                 <input className="g-date-input" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
               </div>
 
+              <div className="g-points-row mt-3">
+                <input
+                  className="g-route-input"
+                  type="number"
+                  min={10000}
+                  step={1000}
+                  value={budget}
+                  onChange={(e) => setBudget(Number(e.target.value || 0))}
+                  placeholder="How many points do you want to use?"
+                />
+              </div>
+
               {mode === 'nerd' && (
                 <div className="grid grid-cols-2 gap-2 mt-3">
-                  <input className="control w-full" type="number" min={10000} step={1000} value={budget} onChange={(e) => setBudget(Number(e.target.value || 0))} placeholder="Points budget" />
                   <input className="control w-full" type="number" min={2} max={14} value={nights} onChange={(e) => setNights(Number(e.target.value || 5))} placeholder="Nights" />
+                  <input className="control w-full" type="number" min={4} max={16} value={hours} onChange={(e) => setHours(Number(e.target.value || 10))} placeholder="Max travel hours" />
                 </div>
               )}
 

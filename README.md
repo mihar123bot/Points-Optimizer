@@ -1,92 +1,49 @@
-# PointPilot (MVP)
+# PointPilot
 
 Fly smarter with points you already have.
 
-Semi-automated travel optimizer for early rollout (friends/family).
-
-This app helps a user:
-- search trip options,
-- compare out-of-pocket (OOP) vs points value,
-- generate a booking playbook (transfer + booking steps),
-- export that playbook.
+PointPilot is a points-first trip planning app that helps you:
+- search trips,
+- compare ranked options,
+- generate a booking playbook.
 
 No auto-booking is performed.
 
 ---
 
-## Current MVP Status (as of latest commit)
+## Current App Status
 
-### Implemented
-- FastAPI backend with endpoints for:
-  - Trip Search
-  - Recommendations generation
-  - Booking Playbook generation
-  - Alerts CRUD (basic)
-- Streamlit app with a decision-first UI:
-  - Step 1: Search Trips
-  - Step 2: Decision View (top 3 options)
-  - View mode toggle: Simple (default) / Nerd
-  - Advanced Details (compare + transparency in Nerd mode)
-  - Progressive search status (3 steps shown during search)
-- Optional destination hint input (`To destination (optional)`)
-- Dynamic playbook logic (no longer static template)
-- Option compare mode (up to 3 options)
-- Booking plan export (`.md`)
-- Transparent scoring payload per option:
-  - points breakdown
-  - friction components
-  - score components
-  - source timestamps/labels
-- CPP rule enforcement updated:
-  - points are considered when CPP > 1.0 (flight and hotel)
-  - if LIVE flight award inventory exists and flight CPP > 1.0, default strategy prefers points on flights
-  - hotels use points when hotel CPP > 1.0 and flight award is unavailable/weak
-  - when both are eligible with LIVE award data, UI supports scenario toggle (flight vs hotel points)
-- API mode status in UI:
-  - `LIVE` when real provider data is used
-  - `FALLBACK` when estimator/mock data is used
+### Primary UI (default)
+- **Next.js + TypeScript frontend** in `frontend/`
+- **Desktop/web-first layout** (mobile styling still supported)
+- Roame-inspired cinematic hero + structured search tray
+- 3-step flow:
+  1. Search
+  2. Options
+  3. Playbook
+- Simple / Nerd mode toggle
 
-### Data/provider mode
-- **Cash flights:** Free-tier Amadeus test API path implemented (if keys provided)
-- **Hotels:** Free-tier Amadeus test API path implemented (if keys provided)
-- **Award points availability:** Live adapter hook supported via configurable Seats.aero-style endpoint (`SEATS_AERO_API_KEY` + `SEATS_AERO_URL`) with estimator fallback
-- If provider credentials are missing or a call fails/quota-limits, app gracefully falls back to estimator mode with clear labeling.
+### Backend
+- FastAPI backend in `backend/`
+- Endpoints for trip search, recommendations, and playbook generation
+- Local JSON persistence for MVP
 
----
-
-## Scope Constraints (MVP rollout)
-
-### Origins
-- US departures only (enforced in backend recommendations route)
-
-### Destination coverage (allowlisted)
-- North America
-- Argentina
-- Peru
-- France
-- Italy
-- UK
-- Iceland
-- Greece
-- Japan
-- Thailand
-
-Current destination pool codes include: `CUN, PUJ, NAS, SJD, YVR, EZE, LIM, CDG, FCO, LHR, KEF, ATH, HND, BKK`
+### Legacy UI
+- Streamlit app (`app.py`) still exists for internal fallback/testing
+- Not the default UI anymore
 
 ---
 
 ## Architecture
 
-### Frontend
-- `app.py` (Streamlit)
-- Google Flights-inspired input layout:
-  - row 1: Trip type, Travelers, Cabin, Nights
-  - row 2: From + To destination (optional)
-  - row 3: Depart/Return + Search CTA
-  - row 4: Reward Points Optimization inputs
+### Frontend (default)
+- `frontend/app/page.tsx` (main UI flow)
+- `frontend/app/globals.css` (visual system)
+- `frontend/lib/api.ts` (API calls)
+- `frontend/lib/types.ts` (TS models)
 
 ### Backend
-- FastAPI app (`backend/app/main.py`)
+- `backend/app/main.py`
 - Routers:
   - `trip_searches.py`
   - `recommendations.py`
@@ -98,47 +55,27 @@ Current destination pool codes include: `CUN, PUJ, NAS, SJD, YVR, EZE, LIM, CDG,
 - Adapters:
   - `adapters/providers.py`
 
-### Persistence (local JSON)
-- `backend/data/trip_searches.json`
-- `backend/data/recommendations.json`
-- `backend/data/alerts.json`
-
 ---
 
-## API/Scoring Behavior
+## MVP Scope Constraints
 
-### Recommendations pipeline
-1. Validate trip search + origin constraints
-2. Check short-lived recommendation cache (5-minute TTL) for identical search key
-3. Generate destination candidates from allowlist + constraints + optional preferred destination hints
-4. Pull provider data (or fallback):
-   - airfare cash,
-   - hotel cash/points estimate,
-   - award estimate
-5. Compute metrics:
-   - OOP
-   - flight CPP
-   - hotel CPP
-   - blended CPP (capped)
-   - friction
-   - composite score
-6. Enforce CPP rule (`CPP > 1.0`) with flight-award preference when LIVE award inventory exists
-7. Return winner tiles + ranked options (with cache metadata: HIT/MISS)
+### Origins
+- US departures only (enforced)
 
-### Scoring model (MVP)
-`score = w1 * (-OOP_norm) + w2 * CPP_norm + w3 * (-friction_norm)`
-- default weights in code:
-  - `w1 = 0.5`
-  - `w2 = 0.35`
-  - `w3 = 0.15`
+### Destination allowlist
+- North America
+- Argentina
+- Peru
+- France
+- Italy
+- UK
+- Iceland
+- Greece
+- Japan
+- Thailand
 
-### Explainability returned per option
-- `points_breakdown`
-- `friction_components`
-- `score_components`
-- `source_timestamps`
-- `source_labels`
-- `api_mode`
+Current destination pool codes include:
+`CUN, PUJ, NAS, SJD, YVR, EZE, LIM, CDG, FCO, LHR, KEF, ATH, HND, BKK`
 
 ---
 
@@ -146,21 +83,23 @@ Current destination pool codes include: `CUN, PUJ, NAS, SJD, YVR, EZE, LIM, CDG,
 
 ## 1) Install dependencies
 
-Backend deps:
+### Backend
 ```bash
 cd backend
 pip install -r requirements.txt
 ```
 
-UI deps:
+### Frontend (default)
 ```bash
-cd ..
-pip install -r requirements.txt
+cd ../frontend
+npm install
 ```
+
+---
 
 ## 2) Environment variables
 
-Create env vars (or a `.env` in `backend/`) for live provider paths:
+### Backend env (`backend/.env`)
 
 ```bash
 AMADEUS_CLIENT_ID=your_id
@@ -169,36 +108,35 @@ SEATS_AERO_API_KEY=your_key_optional
 SEATS_AERO_URL=https://your-award-endpoint.example.com/search
 ```
 
-Optional:
+### Frontend env (`frontend/.env.local`)
+
 ```bash
-API_BASE=http://localhost:8000
+NEXT_PUBLIC_API_BASE=http://localhost:8000
 ```
 
-Notes:
-- Backend loads env via `python-dotenv` on startup.
-- If Amadeus vars are absent, app still runs in fallback mode.
+---
 
 ## 3) Run services
 
-Backend:
+### Backend
 ```bash
 cd backend
 uvicorn app.main:app --reload --port 8000
 ```
 
-App:
+### Frontend (default)
 ```bash
-cd ..
-streamlit run app.py --server.port 8502
+cd frontend
+npm run dev
 ```
 
 Open:
+- Frontend: `http://localhost:3000`
 - API docs: `http://localhost:8000/docs`
-- App: `http://localhost:8502`
 
 ---
 
-## Endpoints (MVP)
+## API Endpoints (MVP)
 
 - `GET /health`
 - `POST /v1/trip-searches`
@@ -211,72 +149,8 @@ Open:
 
 ---
 
-## What is real vs placeholder right now
+## Notes
 
-### Real-ish (production path started)
-- Free-tier Amadeus calls for flights/hotels (when credentials available)
-- Dynamic recommendation generation and ranking
-- Dynamic booking playbook with warnings/fallbacks
-- Export flow
-
-### Placeholder / heuristic
-- Award availability points pricing (estimator fallback)
-- Some destination travel-time/stops assumptions in recommender pool
-- Alerts delivery pipeline is not yet fully wired to email/push transport
-
----
-
-## Known limitations
-
-- Amadeus test environment has quota/coverage limitations
-- Award inventory can run in live mode only when a compatible award endpoint is configured; otherwise estimator mode is used
-- Local JSON storage is fine for MVP but not multi-user production
-- No auth/user accounts yet
-- No booking automation by design
-
----
-
-## Suggested next steps
-
-1. Add one real award inventory provider adapter (if access approved)
-2. Migrate storage from JSON to Postgres for reliability
-3. Add caching layer (Redis) + provider retry/rate-limit controls
-4. Add alert delivery channel (email first)
-5. Add regression tests for scoring + playbook generation + origin/destination constraints
-
----
-
-## Repo structure
-
-```text
-Points-Optimizer/
-  app.py
-  requirements.txt
-  backend/
-    requirements.txt
-    .env.example
-    app/
-      main.py
-      store.py
-      domain/models.py
-      routers/
-        health.py
-        trip_searches.py
-        recommendations.py
-        playbook.py
-        alerts.py
-      services/
-        scoring.py
-        recommender.py
-      adapters/
-        interfaces.py
-        providers.py
-    data/
-      trip_searches.json
-      recommendations.json
-      alerts.json
-  docs/
-    ARCHITECTURE.md
-    API_CONTRACT.md
-    CODEX_TASKLIST.md
-```
+- Recommendations use a short in-memory cache (TTL-based) for repeated identical requests.
+- Live/fallback behavior is transparent in API response fields (`api_mode`, source labels/timestamps).
+- Local JSON storage is fine for MVP/demo but not production scale.

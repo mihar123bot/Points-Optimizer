@@ -15,7 +15,7 @@ body {
 }
 
 .mobile-shell {
-  max-width: 430px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -238,6 +238,11 @@ body {
   padding: 0 14px;
   font-size: 28px;
   color: #374151;
+}
+
+.g-points-row {
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
 .g-cta-wrap {
