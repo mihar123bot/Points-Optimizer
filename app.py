@@ -448,15 +448,13 @@ if "bundle" not in st.session_state:
 if "api_error" not in st.session_state:
     st.session_state.api_error = None
 
-st.markdown(
-    """
-    <div class="hero">
-      <div style="font-size:1.25rem;font-weight:600;">PointPilot</div>
-      <div style="font-size:.92rem;color:#475569;">Fly smarter with points you already have.</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+with st.container(border=True):
+    h1, h2 = st.columns([3, 1])
+    with h1:
+        st.image("assets/pointpilot_logo_primary.png", width=360)
+        st.caption("Fly smarter with points you already have.")
+    with h2:
+        st.image("assets/pointpilot_logo_icon.png", width=120)
 
 render_steps(st.session_state.step)
 render_search()
