@@ -39,6 +39,13 @@ st.markdown(
       }
       .hero-title { color: var(--text-primary); font-size: 1.25rem; font-weight: 600; margin-bottom: 4px; }
       .hero-sub { color: var(--text-secondary); font-size: .92rem; }
+      .steps { display:flex; gap:8px; margin: 8px 0 16px 0; flex-wrap: wrap; }
+      .step-pill { border:1px solid var(--border); border-radius:999px; padding:6px 12px; font-size:12px; color:var(--text-secondary); background:#fff; }
+      .step-pill.active { border-color: var(--app-blue); color: var(--app-blue); background:#eff6ff; }
+      .badge { display:inline-block; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:600; margin-right:6px; }
+      .badge-live { background:#e8f5e9; color:#166534; border:1px solid #bbf7d0; }
+      .badge-est { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; }
+      .badge-best { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
 
       .stButton > button, .stFormSubmitButton > button {
         border-radius: 999px !important;
@@ -135,7 +142,12 @@ st.markdown(
     """
     <div class="hero">
       <div class="hero-title">PointsTrip Optimizer</div>
-      <div class="hero-sub">Step 1: Search trips · Step 2: Pick an option · Step 3: Execute the booking plan.</div>
+      <div class="hero-sub">Simple, credible trip decisions with exportable playbooks.</div>
+    </div>
+    <div class="steps">
+      <span class="step-pill active">1 · Search</span>
+      <span class="step-pill">2 · Best Options</span>
+      <span class="step-pill">3 · Playbook</span>
     </div>
     """,
     unsafe_allow_html=True,
@@ -287,30 +299,103 @@ else:
     st.caption("Simple mode: top 3 options only. Use Nerd mode for full scoring and source internals.")
 
     top3 = options[:3]
+    best_value_id = bundle.get("winner_tiles", {}).get("best_balanced")
     for opt in top3:
         with st.container(border=True):
-            a, b, c, d = st.columns([2.4, 1, 1, 1])
             dest_label = destination_names.get(opt["destination"], opt["destination"])
-            a.markdown(f"#### {pretty_option_id(opt['id'])} · {dest_label}")
-            b.metric("Out-of-pocket", f"${opt['oop_total']:.0f}")
-            c.metric("CPP", f"{opt.get('cpp_blended_capped', 0):.2f}¢")
-            d.metric("Stops", opt.get("friction_components", {}).get("stops_penalty", 0) / 2)
-            st.write("Why:", ", ".join(opt.get("rationale", [])))
-            st.caption(
-                f"Component modes — Flights: {opt.get('cash_flights_mode','ESTIMATED')} · Hotels: {opt.get('cash_hotels_mode','ESTIMATED')} · Awards: {opt.get('award_mode','ESTIMATED')}"
+            strategy = opt.get("points_strategy", "none")
+            pb = opt.get("points_breakdown", {})
+            if strategy == "flight":
+                points_used = f"{int(pb.get('flight_points', 0)):,} flight points"
+            elif strategy == "hotel":
+                points_used = f"{int(pb.get('hotel_points', 0)):,} hotel points"
+            else:
+                points_used = "Cash only"
+
+            mode_badge = "badge-live" if opt.get("award_mode", "ESTIMATED") == "LIVE" else "badge-est"
+            mode_text = opt.get("award_mode", "ESTIMATED")
+            best_badge = '<span class="badge badge-best">BEST VALUE</span>' if opt.get("id") == best_value_id else ''
+            st.markdown(
+                f"#### {pretty_option_id(opt['id'])} · {dest_label} {best_badge} "
+                f"<span class='badge {mode_badge}'>{mode_text}</span>",
+                unsafe_allow_html=True,
             )
-            if opt.get("award_mode", "ESTIMATED") != "LIVE":
-                st.info("Award values are estimated for this option (live award source unavailable, quota-limited, or not configured).")
 
-            with st.expander("Validate this award"):
-                for step in opt.get("validation_steps", []):
-                    st.write(f"- {step}")
-                award_src = opt.get("award_details", {}).get("source_url")
-                if award_src:
-                    st.write(f"Source link: {award_src}")
-                st.caption(f"As of: {opt.get('award_details', {}).get('retrieved_at', opt.get('as_of', '-'))}")
+            m1, m2 = st.columns(2)
+            m1.metric("Total OOP", f"${opt['oop_total']:.0f}")
+            m2.metric("Points used", points_used)
 
-            render_playbook(opt, dest_label)
+            s1, s2, s3 = st.columns(3)
+            s1.caption(f"CPP: {opt.get('cpp_blended_capped', 0):.2f}¢")
+            s2.caption(f"Stops: {int(opt.get('friction_components', {}).get('stops_penalty', 0) / 2)}")
+            travel_hours = opt.get('friction_components', {}).get('travel_time_penalty', 0) / 0.5 + 7
+            s3.caption(f"Travel time: ~{travel_hours:.1f}h")
+
+            st.caption(
+                f"As of — flights: {opt.get('source_timestamps', {}).get('airfare', '-')}, hotels: {opt.get('source_timestamps', {}).get('hotel', '-')}, awards: {opt.get('source_timestamps', {}).get('award', '-') }"
+            )
+
+            b1, b2, b3 = st.columns(3)
+            if b1.button("View details", key=f"view-{opt['id']}", use_container_width=True):
+                st.session_state[f"show_details_{opt['id']}"] = not st.session_state.get(f"show_details_{opt['id']}", False)
+            if b2.button("Validate", key=f"val-{opt['id']}", use_container_width=True):
+                st.session_state[f"show_validate_{opt['id']}"] = not st.session_state.get(f"show_validate_{opt['id']}", False)
+            if b3.button("Export playbook", key=f"exp-{opt['id']}", use_container_width=True):
+                payload = {"option_id": opt["id"]}
+                pb_resp = requests.post(f"{API_BASE}/v1/playbook/generate", json=payload, timeout=20)
+                if pb_resp.ok:
+                    p = pb_resp.json()
+                    export_md = "\n".join([
+                        f"# {pretty_option_id(opt['id'])} · {dest_label}",
+                        f"- Out-of-pocket: ${opt['oop_total']:.2f}",
+                        f"- Points used: {points_used}",
+                        "\n## Transfer Steps", *[f"- {s}" for s in p["transfer_steps"]],
+                        "\n## Booking Steps", *[f"- {s}" for s in p["booking_steps"]],
+                        "\n## Warnings", *[f"- {s}" for s in p["warnings"]],
+                        "\n## Fallbacks", *[f"- {s}" for s in p["fallbacks"]],
+                    ])
+                    st.session_state[f"export_md_{opt['id']}"] = export_md
+                else:
+                    st.error("Could not generate playbook right now.")
+
+            if st.session_state.get(f"export_md_{opt['id']}"):
+                st.download_button(
+                    "Download playbook (.md)",
+                    data=st.session_state[f"export_md_{opt['id']}"],
+                    file_name=f"{opt['id']}_booking_plan.md",
+                    mime="text/markdown",
+                    use_container_width=True,
+                    key=f"dl-{opt['id']}",
+                )
+
+            if st.session_state.get(f"show_validate_{opt['id']}", False):
+                with st.expander("Validate this award", expanded=True):
+                    ad = opt.get("award_details", {})
+                    st.write(f"Program: {ad.get('program', '-')}")
+                    st.write(f"Route: {', '.join(origins)} → {opt.get('destination', '-')}")
+                    st.write(f"Date: {start} to {end}")
+                    st.write(f"Cabin: {ad.get('cabin', '-')}")
+                    points_val = ad.get('points')
+                    points_txt = f"{int(points_val):,}" if isinstance(points_val, (int, float)) else str(points_val or "-")
+                    st.write(f"Points + taxes: {points_txt} + ${float(ad.get('taxes_fees',0)):.2f}")
+                    for step in opt.get("validation_steps", []):
+                        st.write(f"- {step}")
+                    if ad.get("source_url"):
+                        st.write(f"Source: {ad.get('source_url')}")
+                    st.caption(f"Retrieved: {ad.get('retrieved_at', opt.get('as_of', '-'))}")
+
+            if st.session_state.get(f"show_details_{opt['id']}", False) or ui_mode == "Nerd":
+                with st.expander("Details", expanded=ui_mode == "Nerd"):
+                    st.write("Why:", ", ".join(opt.get("rationale", [])))
+                    st.json({
+                        "points_breakdown": opt.get("points_breakdown", {}),
+                        "friction_components": opt.get("friction_components", {}),
+                        "score_components": opt.get("score_components", {}),
+                        "source_timestamps": opt.get("source_timestamps", {}),
+                        "source_labels": opt.get("source_labels", {}),
+                        "award_details": opt.get("award_details", {}),
+                        "api_mode": opt.get("api_mode", "fallback"),
+                    })
 
     if ui_mode == "Nerd":
         with st.expander("Advanced Details", expanded=True):
