@@ -144,60 +144,85 @@ export default function HomePage() {
         </div>
 
         {step === 'search' && (
-          <form onSubmit={onSubmit} className="search-tray p-4 md:p-5 mt-2 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="label">From airports</label>
-                <ChipGroup values={ORIGINS} selected={origins} onToggle={(v) => toggle(origins, setOrigins, v)} />
-              </div>
-              <div>
-                <label className="label">To airports (optional)</label>
-                <ChipGroup values={DESTS} selected={dests} onToggle={(v) => toggle(dests, setDests, v)} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div>
-                <label className="label">Depart</label>
-                <input className="control w-full" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Return</label>
-                <input className="control w-full" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Points budget</label>
-                <input className="control w-full" type="number" min={10000} step={1000} value={budget} onChange={(e) => setBudget(Number(e.target.value || 0))} />
-              </div>
-              <div>
-                <label className="label">Nights</label>
-                <input className="control w-full" type="number" min={2} max={14} value={nights} onChange={(e) => setNights(Number(e.target.value || 5))} />
-              </div>
-            </div>
-
-            {mode === 'nerd' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <>
+            <form onSubmit={onSubmit} className="search-tray p-4 md:p-5 mt-2 relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className="label">Max travel hours</label>
-                  <input className="control w-full" type="number" min={4} max={16} value={hours} onChange={(e) => setHours(Number(e.target.value || 10))} />
+                  <label className="label">From airports</label>
+                  <ChipGroup values={ORIGINS} selected={origins} onToggle={(v) => toggle(origins, setOrigins, v)} />
                 </div>
                 <div>
-                  <label className="label">Max stops</label>
-                  <select className="control w-full" value={stops} onChange={(e) => setStops(Number(e.target.value))}>
-                    <option value={0}>0</option>
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                  </select>
+                  <label className="label">To airports (optional)</label>
+                  <ChipGroup values={DESTS} selected={dests} onToggle={(v) => toggle(dests, setDests, v)} />
                 </div>
               </div>
-            )}
 
-            <div className="mt-4">
-              <button type="submit" className="btn-primary" disabled={!canSearch || loading}>
-                {loading ? 'Searching...' : 'Search Trips'}
-              </button>
-            </div>
-          </form>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div>
+                  <label className="label">Depart</label>
+                  <input className="control w-full" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+                </div>
+                <div>
+                  <label className="label">Return</label>
+                  <input className="control w-full" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+                </div>
+                <div>
+                  <label className="label">Points budget</label>
+                  <input className="control w-full" type="number" min={10000} step={1000} value={budget} onChange={(e) => setBudget(Number(e.target.value || 0))} />
+                </div>
+                <div>
+                  <label className="label">Nights</label>
+                  <input className="control w-full" type="number" min={2} max={14} value={nights} onChange={(e) => setNights(Number(e.target.value || 5))} />
+                </div>
+              </div>
+
+              {mode === 'nerd' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                  <div>
+                    <label className="label">Max travel hours</label>
+                    <input className="control w-full" type="number" min={4} max={16} value={hours} onChange={(e) => setHours(Number(e.target.value || 10))} />
+                  </div>
+                  <div>
+                    <label className="label">Max stops</label>
+                    <select className="control w-full" value={stops} onChange={(e) => setStops(Number(e.target.value))}>
+                      <option value={0}>0</option>
+                      <option value={1}>1</option>
+                      <option value={2}>2</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4">
+                <button type="submit" className="btn-primary" disabled={!canSearch || loading}>
+                  {loading ? 'Searching...' : 'Search Trips'}
+                </button>
+              </div>
+            </form>
+
+            <section className="deals-shell mt-5">
+              <h2 className="deals-title">Discover the best deals</h2>
+              <p className="deals-sub">in First, Business, and Economy class</p>
+
+              <div className="deal-card mt-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-2xl font-semibold text-slate-900">8:35 AM - 11:45 AM</div>
+                    <div className="text-slate-500">Air France · Business</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-4xl font-semibold text-slate-900">47,500 pts</div>
+                    <div className="text-slate-500">+$86.00 · Seats Left: 1+</div>
+                  </div>
+                </div>
+                <div className="mt-3 text-slate-700">Apr 15 · FDF → CAY · 2h 10m · Nonstop</div>
+              </div>
+
+              <div className="mt-4">
+                <button className="btn-pink">View All</button>
+              </div>
+            </section>
+          </>
         )}
 
         {step === 'options' && bundle && (
