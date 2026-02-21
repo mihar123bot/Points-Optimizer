@@ -186,6 +186,73 @@ body {
   box-shadow: 0 8px 20px rgba(255, 25, 115, 0.28);
 }
 
+.g-search-shell {
+  border-radius: 24px;
+}
+
+.g-top-row {
+  display: flex;
+  gap: 18px;
+  font-size: 15px;
+  color: #6b7280;
+}
+
+.g-route-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.g-route-input {
+  height: 58px;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  padding: 0 14px;
+  font-size: 18px;
+  color: #374151;
+}
+
+.g-swap {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 24px;
+}
+
+.g-date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.g-date-input {
+  height: 58px;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  padding: 0 14px;
+  font-size: 28px;
+  color: #374151;
+}
+
+.g-cta-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+  margin-bottom: -32px;
+}
+
+.g-explore-btn {
+  height: 54px;
+  min-width: 210px;
+  font-size: 20px;
+}
+
 @media (max-width: 640px) {
   .glass {
     border-radius: 22px;
