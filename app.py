@@ -1,7 +1,10 @@
 import requests
 import streamlit as st
 
-API_BASE = st.secrets.get("API_BASE", "http://localhost:8000") if hasattr(st, "secrets") else "http://localhost:8000"
+try:
+    API_BASE = st.secrets.get("API_BASE", "http://localhost:8000")
+except Exception:
+    API_BASE = "http://localhost:8000"
 
 st.set_page_config(page_title="PointsTrip Optimizer", layout="wide")
 st.title("PointsTrip Optimizer")
