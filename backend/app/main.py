@@ -1,5 +1,8 @@
 from fastapi import FastAPI
+from dotenv import load_dotenv
 from app.routers import health, trip_searches, recommendations, playbook, alerts
+
+load_dotenv()
 
 app = FastAPI(title="PointsTrip Optimizer API", version="0.1.0")
 

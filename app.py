@@ -249,6 +249,12 @@ if not bundle:
     st.info("Step 2 appears here after search. If no options appear, relax stops/time filters.")
 else:
     options = bundle.get("options", [])
+    live_count = sum(1 for o in options if o.get("api_mode") == "live")
+    if live_count > 0:
+        st.success(f"API Mode: LIVE ({live_count}/{len(options)} options using live provider data)")
+    else:
+        st.warning("API Mode: FALLBACK (using estimator/mock data). Add AMADEUS_CLIENT_ID/SECRET to enable live data.")
+
     st.markdown("### Step 2 · Decision View")
     st.caption("Simple mode: top 3 options only. Use Advanced Details for deep analysis.")
 
@@ -294,5 +300,7 @@ else:
                         "friction_components": opt.get("friction_components", {}),
                         "score_components": opt.get("score_components", {}),
                         "source_timestamps": opt.get("source_timestamps", {}),
+                        "source_labels": opt.get("source_labels", {}),
+                        "api_mode": opt.get("api_mode", "fallback"),
                         "marriott_points_eligible": opt.get("marriott_points_eligible", False),
                     })

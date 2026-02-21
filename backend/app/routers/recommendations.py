@@ -137,6 +137,16 @@ def generate_recommendations(req: GenerateRequest):
                     "airfare": airfare["as_of"],
                     "hotel": hotel["as_of"],
                 },
+                source_labels={
+                    "award": award.get("source", "unknown"),
+                    "airfare": airfare.get("source", "unknown"),
+                    "hotel": hotel.get("source", "unknown"),
+                },
+                api_mode=(
+                    "live"
+                    if (airfare.get("source") == "amadeus_test" or hotel.get("source") == "amadeus_test")
+                    else "fallback"
+                ),
             )
         )
 

@@ -49,6 +49,8 @@ class RecommendationOption(BaseModel):
     marriott_points_eligible: bool = False
     hotel_booking_mode: str = "cash"
     source_timestamps: dict = Field(default_factory=dict)
+    source_labels: dict = Field(default_factory=dict)
+    api_mode: str = "fallback"
 
 
 class RecommendationBundle(BaseModel):
