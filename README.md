@@ -1,173 +1,146 @@
 # PointPilot
 
-Fly smarter with points you already have.
+**Explore. Discover. Capitalize.**
 
-PointPilot is a points-first trip planning app that helps users:
-- search trips,
-- compare ranked options,
-- generate a booking playbook.
-
-No auto-booking is performed.
+PointPilot is a points-first trip planning app. Enter your loyalty points balances, pick your dates, and get ranked award flight options with a step-by-step booking playbook — no auto-booking, full transparency.
 
 ---
 
-## Current Status (latest)
+## 3-Step Flow
 
-### Frontend (default)
-- **Next.js + TypeScript** app in `frontend/`
-- **Desktop/web-first** by default (mobile still supported)
-- Roame/Google-Flights-inspired search layout
-- 3-step flow:
-  1. Search
-  2. Options
-  3. Playbook
-- Simple / Nerd mode toggle
+| Step | What happens |
+|------|-------------|
+| **Explore** | Search by origin, destination, dates, cabin, and points balances |
+| **Discover** | Ranked award options with OOP cost, CPP, and composite score |
+| **Capitalize** | Booking playbook with transfer steps and booking instructions |
 
-### Search UI (latest)
-- Top controls row: trip type, traveler count, cabin
-- Route row: From + swap + Where to
-- Date row: Departure + Return
-- Dedicated points row: “How many points do you want to use?”
-- Centered Explore CTA
+---
+
+## Current Status
+
+### Frontend
+- **Next.js 14 + TypeScript** in `frontend/`
+- Glassmorphic hero UI — blurred background, dark glass search panel
+- Tagline and step breadcrumb reflect the 3-step Explore → Discover → Capitalize flow
+- Search form embedded inside the hero glass card (no separate tray)
+
+### Search UI
+- **Round trip / Travelers / Cabin** — all selectable in the top row
+- Route row: From + swap + To
+- Date row: Depart + Return
+- Nights + Max travel hours
+- **Points & Programs** — 3 collapsible program buckets (select program + enter balance)
+  - Supported programs: Amex MR, Chase UR, Citi TYP, Capital One, Marriott Bonvoy, World of Hyatt
+  - Balances are summed by backend type (MR / CAP1 / MARRIOTT) before submission
 
 ### Backend
-- FastAPI service in `backend/`
-- Endpoints for trip search, recommendations, and playbook
-- Local JSON persistence for MVP (`data/*.json`)
+- **FastAPI** in `backend/`
+- Endpoints: trip search, recommendations, playbook
+- Scoring: OOP (50%) + CPP (35%) + Friction (15%)
+- Graceful degradation — live APIs (SeatsAero, Amadeus) with mock fallback
+- Local JSON persistence (`data/*.json`) — MVP-grade
 
-### Legacy UI
-- Streamlit app (`app.py`) remains in repo for fallback/testing
-- Not the default experience
-
----
-
-## Screenshots
-
-### Desktop Home (current)
-
-![PointPilot Desktop Home](docs/screenshots/home-desktop.png)
+### Legacy
+- Streamlit app (`app.py`) kept for fallback/testing only
 
 ---
 
 ## Architecture
 
 ### Frontend
-- `frontend/app/page.tsx` — main product flow/UI
-- `frontend/app/globals.css` — styling + layout system
-- `frontend/lib/api.ts` — API client calls
+- `frontend/app/page.tsx` — full product UI (search, options, playbook steps)
+- `frontend/app/globals.css` — glassmorphic design system
+- `frontend/lib/api.ts` — API client
 - `frontend/lib/types.ts` — TypeScript models
 
 ### Backend
-- `backend/app/main.py`
-- Routers:
-  - `trip_searches.py`
-  - `recommendations.py`
-  - `playbook.py`
-  - `alerts.py`
-- Services:
-  - `recommender.py`
-  - `scoring.py`
-- Adapters:
-  - `adapters/providers.py`
+- `backend/app/main.py` — FastAPI app + router setup
+- Routers: `trip_searches.py`, `recommendations.py`, `playbook.py`, `alerts.py`
+- Services: `recommender.py` (destination candidates), `scoring.py` (composite score)
+- Adapters: `adapters/providers.py` (award, airfare, hotel providers)
 
 ---
 
 ## MVP Constraints
 
-### Origins
-- US departure airports only (enforced)
+**Origins** — US airports only: IAD, DCA, BWI, JFK, EWR, BOS, LAX, SFO, ORD, ATL, MIA, DFW, SEA
 
-### Destination scope
-- North America
-- Argentina
-- Peru
-- France
-- Italy
-- UK
-- Iceland
-- Greece
-- Japan
-- Thailand
-
-Current destination pool includes:
+**Destinations** — 14 destinations:
 `CUN, PUJ, NAS, SJD, YVR, EZE, LIM, CDG, FCO, LHR, KEF, ATH, HND, BKK`
+
+**Points programs** — MR (Amex/Chase/Citi), CAP1 (Capital One), MARRIOTT (Marriott/Hyatt)
 
 ---
 
 ## Setup
 
-### 1) Install dependencies
+### 1. Install dependencies
 
-Backend:
 ```bash
+# Backend
 cd backend
 pip install -r requirements.txt
-```
 
-Frontend:
-```bash
+# Frontend
 cd ../frontend
 npm install
 ```
 
-### 2) Environment variables
+### 2. Environment variables
 
-Backend (`backend/.env`):
+`backend/.env`:
 ```bash
 AMADEUS_CLIENT_ID=your_id
 AMADEUS_CLIENT_SECRET=your_secret
-SEATS_AERO_API_KEY=your_key_optional
-SEATS_AERO_URL=https://your-award-endpoint.example.com/search
+SEATS_AERO_API_KEY=your_key        # optional
+SEATS_AERO_URL=https://...         # optional
 ```
 
-Frontend (`frontend/.env.local`):
+`frontend/.env.local`:
 ```bash
 NEXT_PUBLIC_API_BASE=http://localhost:8000
 ```
 
-### 3) Run locally
+### 3. Run locally
 
-Backend:
 ```bash
-cd backend
-uvicorn app.main:app --reload --port 8000
+# Terminal 1 — backend
+cd backend && uvicorn app.main:app --reload --port 8000
+
+# Terminal 2 — frontend
+cd frontend && npm run dev
 ```
 
-Frontend:
-```bash
-cd frontend
-npm run dev
-```
-
-Open:
-- Frontend: `http://localhost:3000`
-- API docs: `http://localhost:8000/docs`
+- Frontend: http://localhost:3000
+- API docs: http://localhost:8000/docs
 
 ---
 
-## Deploy (Vercel + backend host)
+## Deploy
 
 - Deploy `frontend/` to Vercel
-- Set `NEXT_PUBLIC_API_BASE` in Vercel project settings
-- Host backend separately (Render/Railway/Fly/etc.)
+- Set `NEXT_PUBLIC_API_BASE` in Vercel project env vars
+- Host backend on Render / Railway / Fly.io
 
 ---
 
-## API Endpoints (MVP)
+## API Reference
 
-- `GET /health`
-- `POST /v1/trip-searches`
-- `GET /v1/trip-searches/{id}`
-- `POST /v1/recommendations/generate`
-- `POST /v1/playbook/generate`
-- `POST /v1/alerts`
-- `GET /v1/alerts`
-- `PATCH /v1/alerts/{id}`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check |
+| `POST` | `/v1/trip-searches` | Create a trip search |
+| `GET` | `/v1/trip-searches/{id}` | Get a trip search |
+| `POST` | `/v1/recommendations/generate` | Generate ranked options |
+| `POST` | `/v1/playbook/generate` | Generate booking playbook |
+| `POST` | `/v1/alerts` | Create price alert |
+| `GET` | `/v1/alerts` | List alerts |
+| `PATCH` | `/v1/alerts/{id}` | Update alert |
 
 ---
 
 ## Notes
 
-- Recommendations use short TTL caching for repeated identical queries.
-- Live/fallback transparency is exposed in response fields (`api_mode`, source labels/timestamps).
-- JSON persistence is MVP-grade only (not production-scale).
+- Recommendations are short-TTL cached for repeated identical queries
+- Every response includes `api_mode` (live vs fallback), source labels, and timestamps for transparency
+- JSON persistence is MVP-grade — not production-scale

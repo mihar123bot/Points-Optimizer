@@ -5,49 +5,84 @@ import { createTripSearch, generatePlaybook, generateRecommendations } from '@/l
 import { PlaybookResponse, RecommendationBundle } from '@/lib/types';
 
 type Step = 'search' | 'options' | 'playbook';
-type Mode = 'simple' | 'nerd';
+type BackendProgram = 'MR' | 'CAP1' | 'MARRIOTT';
+type Cabin = 'economy' | 'premium_economy' | 'business' | 'first';
 
-const ORIGINS = ['IAD', 'DCA', 'BWI', 'JFK', 'EWR', 'BOS', 'LAX', 'SFO', 'ORD', 'ATL', 'MIA', 'DFW', 'SEA'];
-const DESTS = ['CUN', 'PUJ', 'NAS', 'SJD', 'YVR', 'EZE', 'LIM', 'CDG', 'FCO', 'LHR', 'KEF', 'ATH', 'HND', 'BKK'];
-
-function Pill({ text, active }: { text: string; active: boolean }) {
-  return <span className={`px-3 py-1 rounded-full text-xs border ${active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/25 text-white border-white/40'}`}>{text}</span>;
+interface Bucket {
+  program: string;
+  points: number;
 }
 
-function ChipGroup({ values, selected, onToggle }: { values: string[]; selected: string[]; onToggle: (v: string) => void }) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {values.map((v) => (
-        <button key={v} type="button" className={`chip ${selected.includes(v) ? 'active' : ''}`} onClick={() => onToggle(v)}>
-          {v}
-        </button>
-      ))}
-    </div>
+const PROGRAM_OPTIONS = [
+  'Amex Membership Rewards',
+  'Chase Ultimate Rewards',
+  'Citi ThankYou Points',
+  'Capital One Miles',
+  'Marriott Bonvoy',
+  'World of Hyatt',
+];
+
+const PROGRAM_BACKEND: Record<string, BackendProgram> = {
+  'Amex Membership Rewards': 'MR',
+  'Chase Ultimate Rewards': 'MR',
+  'Citi ThankYou Points': 'MR',
+  'Capital One Miles': 'CAP1',
+  'Marriott Bonvoy': 'MARRIOTT',
+  'World of Hyatt': 'MARRIOTT',
+};
+
+function buildBalances(buckets: Bucket[]) {
+  const totals: Partial<Record<BackendProgram, number>> = {};
+  for (const b of buckets) {
+    if (!b.points) continue;
+    const type = PROGRAM_BACKEND[b.program] ?? 'MR';
+    totals[type] = (totals[type] ?? 0) + b.points;
+  }
+  return (Object.entries(totals) as [BackendProgram, number][]).map(
+    ([program, balance]) => ({ program, balance })
   );
 }
 
 export default function HomePage() {
   const [step, setStep] = useState<Step>('search');
-  const [mode, setMode] = useState<Mode>('simple');
-  const [origins, setOrigins] = useState<string[]>(['IAD', 'DCA']);
-  const [dests, setDests] = useState<string[]>([]);
+  const [origins, setOrigins] = useState('IAD, DCA');
+  const [dests, setDests] = useState('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
-  const [budget, setBudget] = useState(150000);
+  const [travelers, setTravelers] = useState(1);
+  const [cabin, setCabin] = useState<Cabin>('economy');
+  const [buckets, setBuckets] = useState<Bucket[]>([
+    { program: 'Amex Membership Rewards', points: 0 },
+    { program: 'Capital One Miles', points: 0 },
+    { program: 'Marriott Bonvoy', points: 0 },
+  ]);
   const [nights, setNights] = useState(5);
   const [hours, setHours] = useState(10);
-  const [stops, setStops] = useState(1);
+  const [pointsOpen, setPointsOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [bundle, setBundle] = useState<RecommendationBundle | null>(null);
   const [playbook, setPlaybook] = useState<PlaybookResponse | null>(null);
 
-  const canSearch = useMemo(() => origins.length > 0 && !!start && !!end && budget > 0, [origins, start, end, budget]);
+  const originList = useMemo(
+    () => origins.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
+    [origins]
+  );
+  const destList = useMemo(
+    () => dests.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
+    [dests]
+  );
+  const hasPoints = useMemo(() => buckets.some((b) => b.points > 0), [buckets]);
+  const canSearch = useMemo(
+    () => originList.length > 0 && !!start && !!end && hasPoints,
+    [originList, start, end, hasPoints]
+  );
 
-  const toggle = (arr: string[], set: (v: string[]) => void, v: string) => {
-    if (arr.includes(v)) set(arr.filter((x) => x !== v));
-    else set([...arr, v]);
-  };
+  const updateBucketProgram = (i: number, program: string) =>
+    setBuckets((prev) => prev.map((b, idx) => (idx === i ? { ...b, program } : b)));
+
+  const updateBucketPoints = (i: number, points: number) =>
+    setBuckets((prev) => prev.map((b, idx) => (idx === i ? { ...b, points } : b)));
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -57,24 +92,20 @@ export default function HomePage() {
     setPlaybook(null);
     try {
       const trip = await createTripSearch({
-        origins,
-        preferred_destinations: dests,
+        origins: originList,
+        preferred_destinations: destList,
         date_window_start: start,
         date_window_end: end,
         duration_nights: nights,
-        travelers: 2,
+        travelers,
         vibe_tags: ['warm beach'],
-        cabin_preference: 'economy',
+        cabin_preference: cabin,
         constraints: {
           max_travel_hours: hours,
-          max_stops: stops,
-          nonstop_preferred: stops === 0
+          max_stops: 1,
+          nonstop_preferred: false,
         },
-        balances: [
-          { program: 'MR', balance: budget },
-          { program: 'CAP1', balance: Math.round(budget * 0.5) },
-          { program: 'MARRIOTT', balance: Math.round(budget * 0.4) }
-        ]
+        balances: buildBalances(buckets),
       });
       const recs = await generateRecommendations(trip.id);
       setBundle(recs);
@@ -106,187 +137,288 @@ export default function HomePage() {
       <div className="hero-overlay" />
       <div className="hero-overlay-warm" />
 
-      <section className="mobile-shell w-full px-5 md:px-8 py-8 pb-16">
-        <div className="glass min-h-[72vh] p-6 md:p-8 flex flex-col mb-4">
+      <section className="mobile-shell w-full px-4 md:px-8 pt-4 pb-16">
+        <div className="glass p-5 md:p-8 mb-4">
+
+          {/* ——— Nav ——— */}
           <div className="flex items-center justify-between">
-            <div className="text-white text-4xl font-semibold tracking-tight">pointpilot</div>
-            <button className="btn-primary">Sign up</button>
-          </div>
-
-          <div className="mt-6 text-center">
-            <div className="hero-tabs">
-              <span className="hero-tab active">Flights</span>
-              <span className="hero-tab">Hotels</span>
-            </div>
-          </div>
-
-          <div className="mt-auto">
-            <h1 className="text-white text-[clamp(52px,13vw,82px)] font-bold tracking-[-0.03em] leading-[0.9] max-w-4xl">
-              Free flights using points
-            </h1>
-            <p className="text-white/90 text-[clamp(24px,3vw,40px)] mt-4 max-w-2xl font-light">Book your dream vacation with points</p>
-
-            <div className="hero-search-pill mt-8 p-4 md:p-5 text-white">
-              <div className="text-3xl font-semibold tracking-wide">{origins[0] || 'JFK'} → {dests[0] || 'SFO'}</div>
-              <div className="text-white/85 text-lg mt-1">{start || 'Feb 22'} • Economy • 1 Traveler</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-2 mb-4 items-center">
-          <Pill text="1. Search" active={step === 'search'} />
-          <Pill text="2. Options" active={step === 'options'} />
-          <Pill text="3. Playbook" active={step === 'playbook'} />
-          <div className="ml-auto">
-            <button className={`chip ${mode === 'simple' ? 'active' : ''}`} onClick={() => setMode('simple')}>Simple</button>
-            <button className={`chip ml-2 ${mode === 'nerd' ? 'active' : ''}`} onClick={() => setMode('nerd')}>Nerd</button>
-          </div>
-        </div>
-
-        {step === 'search' && (
-          <>
-            <form onSubmit={onSubmit} className="search-tray p-4 mt-2 relative z-10 g-search-shell">
-              <div className="g-top-row mb-3">
-                <span>⇄ Round trip</span>
-                <span>👤 1</span>
-                <span>Economy</span>
-              </div>
-
-              <div className="g-route-row">
-                <input
-                  className="g-route-input"
-                  value={origins.join(', ')}
-                  onChange={(e) => setOrigins(e.target.value.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean))}
-                  placeholder="From (IAD, DCA)"
-                />
-                <button
-                  type="button"
-                  className="g-swap"
-                  onClick={() => {
-                    const firstOrigin = origins[0] || '';
-                    const firstDest = dests[0] || '';
-                    setOrigins(firstDest ? [firstDest] : []);
-                    setDests(firstOrigin ? [firstOrigin] : []);
-                  }}
-                >
-                  ⇄
-                </button>
-                <input
-                  className="g-route-input"
-                  value={dests.join(', ')}
-                  onChange={(e) => setDests(e.target.value.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean))}
-                  placeholder="Where to?"
-                />
-              </div>
-
-              <div className="g-date-row mt-3">
-                <input className="g-date-input" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
-                <input className="g-date-input" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
-              </div>
-
-              <div className="g-points-row mt-3">
-                <input
-                  className="g-route-input"
-                  type="number"
-                  min={10000}
-                  step={1000}
-                  value={budget}
-                  onChange={(e) => setBudget(Number(e.target.value || 0))}
-                  placeholder="How many points do you want to use?"
-                />
-              </div>
-
-              {mode === 'nerd' && (
-                <div className="grid grid-cols-2 gap-2 mt-3">
-                  <input className="control w-full" type="number" min={2} max={14} value={nights} onChange={(e) => setNights(Number(e.target.value || 5))} placeholder="Nights" />
-                  <input className="control w-full" type="number" min={4} max={16} value={hours} onChange={(e) => setHours(Number(e.target.value || 10))} placeholder="Max travel hours" />
+            <div className="text-white text-2xl font-bold tracking-tight">pointpilot</div>
+            <div className="flex items-center gap-3">
+              {step !== 'search' && (
+                <div className="hidden sm:flex items-center gap-1 text-xs font-semibold">
+                  <span className="text-white/35">Explore</span>
+                  <span className="text-white/25 mx-0.5">›</span>
+                  <span className={step === 'options' ? 'text-white' : 'text-white/35'}>Discover</span>
+                  <span className="text-white/25 mx-0.5">›</span>
+                  <span className={step === 'playbook' ? 'text-white' : 'text-white/35'}>Capitalize</span>
                 </div>
               )}
+              <button className="btn-primary">Sign up</button>
+            </div>
+          </div>
 
-              <div className="g-cta-wrap">
-                <button type="submit" className="btn-primary g-explore-btn" disabled={!canSearch || loading}>
-                  {loading ? 'Searching...' : 'Explore'}
-                </button>
-              </div>
-            </form>
+          {/* ——— Search step ——— */}
+          {step === 'search' && (
+            <>
+              <h1 className="text-white text-[clamp(38px,8vw,68px)] font-bold tracking-[-0.03em] leading-[0.92] max-w-3xl mt-6">
+                Fly smarter<br />with points.
+              </h1>
+              <p className="text-white/60 text-[clamp(15px,1.8vw,19px)] mt-3 font-light tracking-wide">
+                Explore. Discover. Capitalize.
+              </p>
 
-            <section className="deals-shell mt-5">
-              <h2 className="deals-title">Discover the best deals</h2>
-              <p className="deals-sub">in First, Business, and Economy class</p>
+              <form onSubmit={onSubmit} className="search-panel">
+                {/* Top row: trip type, traveler count, cabin */}
+                <div className="flex items-center gap-3 mb-4 flex-wrap">
+                  <span className="text-white/75 text-sm font-medium">Round trip</span>
+                  <span className="text-white/25">·</span>
+                  <select
+                    className="s-top-select"
+                    value={travelers}
+                    onChange={(e) => setTravelers(Number(e.target.value))}
+                  >
+                    {[1, 2, 3, 4, 5, 6].map((n) => (
+                      <option key={n} value={n}>{n} Traveler{n > 1 ? 's' : ''}</option>
+                    ))}
+                  </select>
+                  <span className="text-white/25">·</span>
+                  <select
+                    className="s-top-select"
+                    value={cabin}
+                    onChange={(e) => setCabin(e.target.value as Cabin)}
+                  >
+                    <option value="economy">Economy</option>
+                    <option value="premium_economy">Premium Economy</option>
+                    <option value="business">Business</option>
+                    <option value="first">First</option>
+                  </select>
+                </div>
 
-              <div className="deal-card mt-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-2xl font-semibold text-slate-900">8:35 AM - 11:45 AM</div>
-                    <div className="text-slate-500">Air France · Business</div>
+                {/* Route row */}
+                <div className="s-route-row">
+                  <div className="s-field">
+                    <label className="s-label">From</label>
+                    <input
+                      className="s-input"
+                      value={origins}
+                      onChange={(e) => setOrigins(e.target.value.toUpperCase())}
+                      placeholder="IAD, DCA..."
+                    />
                   </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-semibold text-slate-900">47,500 pts</div>
-                    <div className="text-slate-500">+$86.00 · Seats Left: 1+</div>
+                  <button
+                    type="button"
+                    className="s-swap"
+                    onClick={() => {
+                      const tmp = origins;
+                      setOrigins(dests);
+                      setDests(tmp);
+                    }}
+                  >
+                    ⇄
+                  </button>
+                  <div className="s-field">
+                    <label className="s-label">To</label>
+                    <input
+                      className="s-input"
+                      value={dests}
+                      onChange={(e) => setDests(e.target.value.toUpperCase())}
+                      placeholder="Anywhere"
+                    />
                   </div>
                 </div>
-                <div className="mt-3 text-slate-700">Apr 15 · FDF → CAY · 2h 10m · Nonstop</div>
-              </div>
 
-              <div className="mt-4">
-                <button className="btn-pink">View All</button>
-              </div>
-            </section>
-          </>
-        )}
-
-        {step === 'options' && bundle && (
-          <section className="glass p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[22px] font-semibold text-white">Options</h2>
-              <button className="btn-primary" onClick={() => setStep('search')}>Edit Search</button>
-            </div>
-            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-              {bundle.options?.map((o) => (
-                <article key={o.id} className="rounded-xl border border-white/30 bg-white/20 p-4">
-                  <div className="text-white font-semibold">{o.destination}</div>
-                  <div className="text-white/90 text-sm mt-1">OOP: ${o.oop_total?.toFixed(0)}</div>
-                  {mode === 'nerd' && (
-                    <>
-                      <div className="text-white/90 text-sm">Score: {o.score_final?.toFixed(3)}</div>
-                      <div className="text-white/90 text-sm">Flight CPP: {o.cpp_flight ?? '-'} · Hotel CPP: {o.cpp_hotel ?? '-'}</div>
-                    </>
-                  )}
-                  <div className="mt-3">
-                    <button className="btn-primary" onClick={() => onChooseOption(o.id)} disabled={loading}>
-                      {loading ? 'Loading...' : 'Open Playbook'}
-                    </button>
+                {/* Date row */}
+                <div className="s-date-row">
+                  <div className="s-field">
+                    <label className="s-label">Depart</label>
+                    <input
+                      className="s-input"
+                      type="date"
+                      value={start}
+                      onChange={(e) => setStart(e.target.value)}
+                    />
                   </div>
-                </article>
-              ))}
+                  <div className="s-field">
+                    <label className="s-label">Return</label>
+                    <input
+                      className="s-input"
+                      type="date"
+                      value={end}
+                      onChange={(e) => setEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Nights + Max travel hours */}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="s-field">
+                    <label className="s-label">Nights</label>
+                    <input
+                      className="s-input"
+                      type="number"
+                      min={2}
+                      max={14}
+                      value={nights}
+                      onChange={(e) => setNights(Number(e.target.value || 5))}
+                    />
+                  </div>
+                  <div className="s-field">
+                    <label className="s-label">Max travel hours</label>
+                    <input
+                      className="s-input"
+                      type="number"
+                      min={4}
+                      max={16}
+                      value={hours}
+                      onChange={(e) => setHours(Number(e.target.value || 10))}
+                    />
+                  </div>
+                </div>
+
+                {/* Points buckets — collapsible */}
+                <div className="mb-3">
+                  <button
+                    type="button"
+                    className="s-collapse-toggle"
+                    onClick={() => setPointsOpen((v) => !v)}
+                  >
+                    <span className="s-label" style={{ marginBottom: 0 }}>Points & Programs</span>
+                    <span className="s-collapse-chevron">{pointsOpen ? '▲' : '▼'}</span>
+                  </button>
+                  {pointsOpen && (
+                    <div className="space-y-2 mt-2">
+                      {buckets.map((bucket, i) => (
+                        <div key={i} className="s-bucket-row">
+                          <select
+                            className="s-select"
+                            value={bucket.program}
+                            onChange={(e) => updateBucketProgram(i, e.target.value)}
+                          >
+                            {PROGRAM_OPTIONS.map((p) => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </select>
+                          <input
+                            className="s-input"
+                            type="number"
+                            min={0}
+                            step={1000}
+                            value={bucket.points || ''}
+                            onChange={(e) => updateBucketPoints(i, Number(e.target.value || 0))}
+                            placeholder="Points"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button type="submit" className="btn-explore" disabled={!canSearch || loading}>
+                  {loading ? 'Searching...' : 'Explore'}
+                </button>
+              </form>
+            </>
+          )}
+
+          {/* ——— Options step ——— */}
+          {step === 'options' && bundle && (
+            <>
+              <div className="mt-6 flex items-center justify-between">
+                <h2 className="text-white text-2xl font-bold">Flight Options</h2>
+                <button className="btn-secondary" onClick={() => setStep('search')}>
+                  Edit Search
+                </button>
+              </div>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                {bundle.options?.map((o) => (
+                  <article key={o.id} className="option-card">
+                    <div className="option-dest">{o.destination}</div>
+                    <div className="option-oop">${o.oop_total?.toFixed(0)} out of pocket</div>
+                    <div className="mt-2 text-sm text-white/55 space-y-0.5">
+                      <div>Score: {o.score_final?.toFixed(3)}</div>
+                      <div>Flight CPP: {o.cpp_flight ?? '—'} · Hotel CPP: {o.cpp_hotel ?? '—'}</div>
+                    </div>
+                    <button
+                      className="btn-open-playbook mt-4"
+                      onClick={() => onChooseOption(o.id)}
+                      disabled={loading}
+                    >
+                      {loading ? 'Loading...' : 'Open Playbook →'}
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ——— Playbook step ——— */}
+          {step === 'playbook' && playbook && (
+            <>
+              <div className="mt-6 flex items-center justify-between">
+                <h2 className="text-white text-2xl font-bold">Your Playbook</h2>
+                <button className="btn-secondary" onClick={() => setStep('options')}>
+                  ← Back to Options
+                </button>
+              </div>
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div className="playbook-section-title">Transfer Steps</div>
+                  <ol className="space-y-3">
+                    {playbook.transfer_steps.map((s, i) => (
+                      <li key={i} className="playbook-step">
+                        <span className="playbook-step-num">{i + 1}</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+                <div>
+                  <div className="playbook-section-title">Booking Steps</div>
+                  <ol className="space-y-3">
+                    {playbook.booking_steps.map((s, i) => (
+                      <li key={i} className="playbook-step">
+                        <span className="playbook-step-num">{i + 1}</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ——— Deals section (search step only) ——— */}
+        {step === 'search' && (
+          <section className="deals-shell mt-4">
+            <h2 className="deals-title">Discover the best deals</h2>
+            <p className="deals-sub">in First, Business, and Economy class</p>
+
+            <div className="deal-card mt-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-xl font-semibold text-slate-900">8:35 AM — 11:45 AM</div>
+                  <div className="text-slate-500 text-sm mt-0.5">Air France · Business</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-slate-900">47,500 pts</div>
+                  <div className="text-slate-500 text-sm mt-0.5">+$86.00 · 1+ Seat</div>
+                </div>
+              </div>
+              <div className="mt-3 text-slate-500 text-sm">Apr 15 · FDF → CAY · 2h 10m · Nonstop</div>
+            </div>
+
+            <div className="mt-4">
+              <button className="btn-pink">View All</button>
             </div>
           </section>
         )}
 
-        {step === 'playbook' && playbook && (
-          <section className="glass p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[22px] font-semibold text-white">Playbook</h2>
-              <button className="btn-primary" onClick={() => setStep('options')}>Back to Options</button>
-            </div>
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
-              <div>
-                <h3 className="font-semibold mb-2">Transfer Steps</h3>
-                <ul className="list-disc pl-5 space-y-1 text-sm">
-                  {playbook.transfer_steps.map((s, i) => <li key={i}>{s}</li>)}
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Booking Steps</h3>
-                <ul className="list-disc pl-5 space-y-1 text-sm">
-                  {playbook.booking_steps.map((s, i) => <li key={i}>{s}</li>)}
-                </ul>
-              </div>
-            </div>
-          </section>
+        {error && (
+          <p className="mt-4 text-sm text-red-100 bg-red-900/40 border border-red-300/30 rounded-xl p-3">
+            {error}
+          </p>
         )}
-
-        {error && <p className="mt-4 text-sm text-red-100 bg-red-900/40 border border-red-300/30 rounded-lg p-3">{error}</p>}
       </section>
     </main>
   );
