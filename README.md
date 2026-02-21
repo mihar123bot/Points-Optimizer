@@ -25,6 +25,7 @@ No auto-booking is performed.
   - Step 2: Decision View (top 3 options)
   - View mode toggle: Simple (default) / Nerd
   - Advanced Details (compare + transparency in Nerd mode)
+  - Progressive search status (3 steps shown during search)
 - Optional destination hint input (`To destination (optional)`)
 - Dynamic playbook logic (no longer static template)
 - Option compare mode (up to 3 options)
@@ -106,20 +107,21 @@ Current destination pool codes include: `CUN, PUJ, NAS, SJD, YVR, EZE, LIM, CDG,
 
 ### Recommendations pipeline
 1. Validate trip search + origin constraints
-2. Generate destination candidates from allowlist + constraints + optional preferred destination hints
-3. Pull provider data (or fallback):
+2. Check short-lived recommendation cache (5-minute TTL) for identical search key
+3. Generate destination candidates from allowlist + constraints + optional preferred destination hints
+4. Pull provider data (or fallback):
    - airfare cash,
    - hotel cash/points estimate,
    - award estimate
-4. Compute metrics:
+5. Compute metrics:
    - OOP
    - flight CPP
    - hotel CPP
    - blended CPP (capped)
    - friction
    - composite score
-5. Enforce CPP rule (`CPP > 1.0`) for both flight and hotel; when both pass, use points on higher CPP side
-6. Return winner tiles + ranked options
+6. Enforce CPP rule (`CPP > 1.0`) with flight-award preference when LIVE award inventory exists
+7. Return winner tiles + ranked options (with cache metadata: HIT/MISS)
 
 ### Scoring model (MVP)
 `score = w1 * (-OOP_norm) + w2 * CPP_norm + w3 * (-friction_norm)`

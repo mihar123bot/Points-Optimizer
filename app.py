@@ -224,10 +224,13 @@ if run:
             ],
         }
         try:
-            with st.spinner("Building your trip options..."):
+            with st.status("Searching trips...", expanded=True) as status:
+                status.write("Step 1/3: saving trip search")
                 ts = requests.post(f"{API_BASE}/v1/trip-searches", json=payload, timeout=20)
                 ts.raise_for_status()
                 trip = ts.json()
+
+                status.write("Step 2/3: fetching and ranking options")
                 rec = requests.post(f"{API_BASE}/v1/recommendations/generate", json={"trip_search_id": trip["id"]}, timeout=30)
                 if rec.status_code == 422:
                     st.session_state.api_error = "No options matched your filters. Try allowing 1 stop, increasing max travel time, or broadening destination style."
@@ -235,6 +238,8 @@ if run:
                 else:
                     rec.raise_for_status()
                     st.session_state.bundle = rec.json()
+                status.write("Step 3/3: preparing decision view")
+                status.update(label="Search complete", state="complete")
         except Exception as e:
             st.session_state.api_error = f"API error: {e}"
             st.session_state.bundle = None
@@ -269,6 +274,12 @@ else:
         st.success(f"API Mode: LIVE ({live_count}/{len(options)} options using live provider data)")
     else:
         st.warning("API Mode: FALLBACK (using estimator/mock data). Add AMADEUS_CLIENT_ID/SECRET and optional SEATS_AERO settings to enable live award validation.")
+
+    cache_mode = bundle.get("winner_tiles", {}).get("_meta_cache")
+    if cache_mode == "HIT":
+        st.caption("Performance: cached result (fast path)")
+    elif cache_mode == "MISS":
+        st.caption("Performance: fresh compute")
 
     ui_mode = st.radio("View mode", options=["Simple", "Nerd"], index=0, horizontal=True)
 

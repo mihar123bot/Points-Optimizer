@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import time
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.domain.models import RecommendationBundle, RecommendationOption
@@ -8,6 +9,9 @@ from app.store import load_trip_searches, load_recommendations, save_recommendat
 from app.adapters.providers import AwardProvider, AirfareProvider, HotelProvider
 
 router = APIRouter()
+
+_RECO_CACHE: dict[str, tuple[float, dict]] = {}
+_CACHE_TTL_SECONDS = 300
 
 
 class GenerateRequest(BaseModel):
@@ -27,6 +31,26 @@ def generate_recommendations(req: GenerateRequest):
     origins = [str(x).upper() for x in payload.get("origins", [])]
     if not origins or any(o not in us_origin_allowlist for o in origins):
         raise HTTPException(422, "MVP currently supports US departure airports only")
+
+    cache_key = str({
+        "trip_search_id": req.trip_search_id,
+        "origins": payload.get("origins"),
+        "start": payload.get("date_window_start"),
+        "end": payload.get("date_window_end"),
+        "nights": payload.get("duration_nights"),
+        "travelers": payload.get("travelers"),
+        "cabin": payload.get("cabin_preference"),
+        "vibe": payload.get("vibe_tags"),
+        "preferred": payload.get("preferred_destinations"),
+        "constraints": payload.get("constraints"),
+    })
+    now_ts = time.time()
+    cached = _RECO_CACHE.get(cache_key)
+    if cached and (now_ts - cached[0] <= _CACHE_TTL_SECONDS):
+        cached_bundle = dict(cached[1])
+        cached_bundle["winner_tiles"] = dict(cached_bundle.get("winner_tiles", {}))
+        cached_bundle["winner_tiles"]["_meta_cache"] = "HIT"
+        return RecommendationBundle.model_validate(cached_bundle)
 
     candidates = generate_destination_candidates(payload)
     if not candidates:
@@ -236,5 +260,8 @@ def generate_recommendations(req: GenerateRequest):
         'best_cpp': best_cpp,
         'best_business': best_cpp,
         'best_balanced': options_sorted[0].id,
+        '_meta_cache': 'MISS',
     }
-    return RecommendationBundle(trip_search_id=req.trip_search_id, winner_tiles=winner_tiles, options=options_sorted)
+    bundle = RecommendationBundle(trip_search_id=req.trip_search_id, winner_tiles=winner_tiles, options=options_sorted)
+    _RECO_CACHE[cache_key] = (time.time(), bundle.model_dump(mode="json"))
+    return bundle
