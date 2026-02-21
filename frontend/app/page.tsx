@@ -5,16 +5,30 @@ import { createTripSearch, generatePlaybook, generateRecommendations } from '@/l
 import { PlaybookResponse, RecommendationBundle } from '@/lib/types';
 
 type Step = 'search' | 'options' | 'playbook';
+type Mode = 'simple' | 'nerd';
 
 const ORIGINS = ['IAD', 'DCA', 'BWI', 'JFK', 'EWR', 'BOS', 'LAX', 'SFO', 'ORD', 'ATL', 'MIA', 'DFW', 'SEA'];
 const DESTS = ['CUN', 'PUJ', 'NAS', 'SJD', 'YVR', 'EZE', 'LIM', 'CDG', 'FCO', 'LHR', 'KEF', 'ATH', 'HND', 'BKK'];
 
 function Pill({ text, active }: { text: string; active: boolean }) {
-  return <span className={`px-3 py-1 rounded-full text-xs border ${active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/30 text-slate-700 border-white/40'}`}>{text}</span>;
+  return <span className={`px-3 py-1 rounded-full text-xs border ${active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/25 text-white border-white/40'}`}>{text}</span>;
+}
+
+function ChipGroup({ values, selected, onToggle }: { values: string[]; selected: string[]; onToggle: (v: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {values.map((v) => (
+        <button key={v} type="button" className={`chip ${selected.includes(v) ? 'active' : ''}`} onClick={() => onToggle(v)}>
+          {v}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default function HomePage() {
   const [step, setStep] = useState<Step>('search');
+  const [mode, setMode] = useState<Mode>('simple');
   const [origins, setOrigins] = useState<string[]>(['IAD', 'DCA']);
   const [dests, setDests] = useState<string[]>([]);
   const [start, setStart] = useState('');
@@ -29,6 +43,11 @@ export default function HomePage() {
   const [playbook, setPlaybook] = useState<PlaybookResponse | null>(null);
 
   const canSearch = useMemo(() => origins.length > 0 && !!start && !!end && budget > 0, [origins, start, end, budget]);
+
+  const toggle = (arr: string[], set: (v: string[]) => void, v: string) => {
+    if (arr.includes(v)) set(arr.filter((x) => x !== v));
+    else set([...arr, v]);
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -84,35 +103,39 @@ export default function HomePage() {
   return (
     <main className="relative min-h-screen">
       <div className="hero-bg" />
+      <div className="hero-overlay" />
+      <div className="hero-overlay-warm" />
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-8">
-        <div className="glass min-h-[34vh] p-6 flex flex-col justify-end mb-5">
+      <section className="mx-auto w-full max-w-6xl px-5 py-8 pb-16">
+        <div className="glass min-h-[72vh] p-6 md:p-8 flex flex-col justify-end mb-4">
           <h1 className="text-white text-[clamp(40px,6vw,64px)] font-bold tracking-[-0.02em] leading-[1.02]">PointPilot</h1>
-          <p className="text-white/90 text-lg mt-2">Fly smarter with points you already have.</p>
+          <p className="text-white/90 text-lg mt-2 max-w-2xl">Fly smarter with points you already have.</p>
         </div>
 
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 items-center">
           <Pill text="1. Search" active={step === 'search'} />
           <Pill text="2. Options" active={step === 'options'} />
           <Pill text="3. Playbook" active={step === 'playbook'} />
+          <div className="ml-auto">
+            <button className={`chip ${mode === 'simple' ? 'active' : ''}`} onClick={() => setMode('simple')}>Simple</button>
+            <button className={`chip ml-2 ${mode === 'nerd' ? 'active' : ''}`} onClick={() => setMode('nerd')}>Nerd</button>
+          </div>
         </div>
 
         {step === 'search' && (
-          <form onSubmit={onSubmit} className="search-tray p-4 md:p-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <form onSubmit={onSubmit} className="search-tray p-4 md:p-5 -mt-8 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="label">From (airports)</label>
-                <input className="control w-full" value={origins.join(',')} onChange={(e) => setOrigins(e.target.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean))} placeholder={ORIGINS.join(', ')} />
+                <label className="label">From airports</label>
+                <ChipGroup values={ORIGINS} selected={origins} onToggle={(v) => toggle(origins, setOrigins, v)} />
               </div>
               <div>
-                <label className="label">To (optional)</label>
-                <input className="control w-full" value={dests.join(',')} onChange={(e) => setDests(e.target.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean))} placeholder={DESTS.join(', ')} />
+                <label className="label">To airports (optional)</label>
+                <ChipGroup values={DESTS} selected={dests} onToggle={(v) => toggle(dests, setDests, v)} />
               </div>
-              <div>
-                <label className="label">Points budget</label>
-                <input className="control w-full" type="number" min={10000} step={1000} value={budget} onChange={(e) => setBudget(Number(e.target.value || 0))} />
-              </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div>
                 <label className="label">Depart</label>
                 <input className="control w-full" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
@@ -122,23 +145,31 @@ export default function HomePage() {
                 <input className="control w-full" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
               </div>
               <div>
+                <label className="label">Points budget</label>
+                <input className="control w-full" type="number" min={10000} step={1000} value={budget} onChange={(e) => setBudget(Number(e.target.value || 0))} />
+              </div>
+              <div>
                 <label className="label">Nights</label>
                 <input className="control w-full" type="number" min={2} max={14} value={nights} onChange={(e) => setNights(Number(e.target.value || 5))} />
               </div>
-
-              <div>
-                <label className="label">Max travel hours</label>
-                <input className="control w-full" type="number" min={4} max={16} value={hours} onChange={(e) => setHours(Number(e.target.value || 10))} />
-              </div>
-              <div>
-                <label className="label">Max stops</label>
-                <select className="control w-full" value={stops} onChange={(e) => setStops(Number(e.target.value))}>
-                  <option value={0}>0</option>
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                </select>
-              </div>
             </div>
+
+            {mode === 'nerd' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label className="label">Max travel hours</label>
+                  <input className="control w-full" type="number" min={4} max={16} value={hours} onChange={(e) => setHours(Number(e.target.value || 10))} />
+                </div>
+                <div>
+                  <label className="label">Max stops</label>
+                  <select className="control w-full" value={stops} onChange={(e) => setStops(Number(e.target.value))}>
+                    <option value={0}>0</option>
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
             <div className="mt-4">
               <button type="submit" className="btn-primary" disabled={!canSearch || loading}>
@@ -158,8 +189,13 @@ export default function HomePage() {
               {bundle.options?.map((o) => (
                 <article key={o.id} className="rounded-xl border border-white/30 bg-white/20 p-4">
                   <div className="text-white font-semibold">{o.destination}</div>
-                  <div className="text-white/90 text-sm mt-1">Score: {o.score_final?.toFixed(3)} · OOP: ${o.oop_total?.toFixed(0)}</div>
-                  <div className="text-white/90 text-sm">Flight CPP: {o.cpp_flight ?? '-'} · Hotel CPP: {o.cpp_hotel ?? '-'}</div>
+                  <div className="text-white/90 text-sm mt-1">OOP: ${o.oop_total?.toFixed(0)}</div>
+                  {mode === 'nerd' && (
+                    <>
+                      <div className="text-white/90 text-sm">Score: {o.score_final?.toFixed(3)}</div>
+                      <div className="text-white/90 text-sm">Flight CPP: {o.cpp_flight ?? '-'} · Hotel CPP: {o.cpp_hotel ?? '-'}</div>
+                    </>
+                  )}
                   <div className="mt-3">
                     <button className="btn-primary" onClick={() => onChooseOption(o.id)} disabled={loading}>
                       {loading ? 'Loading...' : 'Open Playbook'}
@@ -190,23 +226,11 @@ export default function HomePage() {
                   {playbook.booking_steps.map((s, i) => <li key={i}>{s}</li>)}
                 </ul>
               </div>
-              <div>
-                <h3 className="font-semibold mb-2">Warnings</h3>
-                <ul className="list-disc pl-5 space-y-1 text-sm">
-                  {playbook.warnings.map((s, i) => <li key={i}>{s}</li>)}
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Fallbacks</h3>
-                <ul className="list-disc pl-5 space-y-1 text-sm">
-                  {playbook.fallbacks.map((s, i) => <li key={i}>{s}</li>)}
-                </ul>
-              </div>
             </div>
           </section>
         )}
 
-        {error && <p className="mt-4 text-sm text-red-200 bg-red-900/40 border border-red-300/30 rounded-lg p-3">{error}</p>}
+        {error && <p className="mt-4 text-sm text-red-100 bg-red-900/40 border border-red-300/30 rounded-lg p-3">{error}</p>}
       </section>
     </main>
   );
