@@ -22,6 +22,12 @@ def generate_recommendations(req: GenerateRequest):
         raise HTTPException(404, "TripSearch not found")
 
     payload = trip["payload"]
+
+    us_origin_allowlist = {"IAD", "DCA", "BWI", "JFK", "EWR", "BOS", "LAX", "SFO", "ORD", "ATL", "MIA", "DFW", "SEA"}
+    origins = [str(x).upper() for x in payload.get("origins", [])]
+    if not origins or any(o not in us_origin_allowlist for o in origins):
+        raise HTTPException(422, "MVP currently supports US departure airports only")
+
     candidates = generate_destination_candidates(payload)
     if not candidates:
         raise HTTPException(422, "No destinations meet constraints")
@@ -29,7 +35,10 @@ def generate_recommendations(req: GenerateRequest):
     balances = {b.get("program"): int(b.get("balance", 0)) for b in payload.get("balances", [])}
     travelers = int(payload.get("travelers", 2))
     nights = int(payload.get("duration_nights", 5))
+    cabin = str(payload.get("cabin_preference", "economy"))
     origin = payload.get("origins", ["IAD"])[0]
+    depart_date = str(payload.get("date_window_start"))
+    return_date = str(payload.get("date_window_end"))
 
     award_provider = AwardProvider()
     airfare_provider = AirfareProvider()
@@ -41,8 +50,8 @@ def generate_recommendations(req: GenerateRequest):
 
     for i, c in enumerate(candidates[:8], start=1):
         destination = c["code"]
-        award = award_provider.search(origin, destination, travelers)
-        airfare = airfare_provider.search(origin, destination, travelers)
+        award = award_provider.search(origin, destination, travelers, cabin=cabin)
+        airfare = airfare_provider.search(origin, destination, travelers, depart_date=depart_date, return_date=return_date)
         hotel = hotel_provider.search(destination, nights, travelers)
 
         flight_points_required = int(award["points_cost"])

@@ -22,6 +22,7 @@ class TripSearchCreate(BaseModel):
     duration_nights: int = 5
     travelers: int = 2
     vibe_tags: List[str] = Field(default_factory=list)
+    preferred_destinations: List[str] = Field(default_factory=list)
     cabin_preference: Cabin = "economy"
     constraints: Constraints = Field(default_factory=Constraints)
     balances: List[PointsBalance] = Field(default_factory=list)

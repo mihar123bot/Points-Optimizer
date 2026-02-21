@@ -1,32 +1,72 @@
+import os
 import requests
 import streamlit as st
 
-try:
-    API_BASE = st.secrets.get("API_BASE", "http://localhost:8000")
-except Exception:
-    API_BASE = "http://localhost:8000"
+API_BASE = os.getenv("API_BASE", "http://localhost:8000")
 
 st.markdown(
     """
     <style>
       :root {
-        --gf-blue: #1a73e8;
-        --gf-text: #202124;
-        --gf-subtle: #5f6368;
-        --gf-bg: #f8f9fa;
-        --gf-card: #ffffff;
-        --gf-border: #dadce0;
+        --app-blue: #1a73e8;
+        --app-blue-hover: #1765cc;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --bg-main: #ffffff;
+        --bg-surface: #ffffff;
+        --bg-subtle: #f8fafc;
+        --border: #dbe2ea;
       }
-      .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { background: var(--gf-bg) !important; }
+      .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
+        background: var(--bg-main) !important;
+      }
       .block-container { max-width: 1120px; padding-top: 1.2rem; }
-      h1, h2, h3, h4, p, label, .stCaption, .stMarkdown { color: var(--gf-text) !important; }
-      .hero { background: var(--gf-card); border: 1px solid var(--gf-border); border-radius: 24px; padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(60,64,67,.15); }
-      .hero-title { color: var(--gf-text); font-size: 1.25rem; font-weight: 500; margin-bottom: 4px; }
-      .hero-sub { color: var(--gf-subtle); font-size: .92rem; }
-      .stButton > button, .stFormSubmitButton > button { border-radius: 999px !important; border: 1px solid var(--gf-blue) !important; background: var(--gf-blue) !important; color: #fff !important; font-weight: 500; }
-      .stButton > button:hover, .stFormSubmitButton > button:hover { background: #1765cc !important; border-color: #1765cc !important; }
-      [data-testid="stMetric"] { background: var(--gf-card); border: 1px solid var(--gf-border); border-radius: 16px; padding: 10px; box-shadow: 0 1px 2px rgba(60,64,67,.10); }
-      [data-testid="stVerticalBlock"] div[data-testid="stExpander"] { border: 1px solid var(--gf-border); border-radius: 14px; background: #fff; }
+
+      h1, h2, h3, h4, h5, h6,
+      p, label, .stCaption, .stMarkdown,
+      div, span, li {
+        color: var(--text-primary) !important;
+      }
+      small, .stCaption { color: var(--text-secondary) !important; }
+
+      .hero {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 16px 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      }
+      .hero-title { color: var(--text-primary); font-size: 1.25rem; font-weight: 600; margin-bottom: 4px; }
+      .hero-sub { color: var(--text-secondary); font-size: .92rem; }
+
+      .stButton > button, .stFormSubmitButton > button {
+        border-radius: 999px !important;
+        border: 1px solid var(--app-blue) !important;
+        background: var(--app-blue) !important;
+        color: #ffffff !important;
+        font-weight: 500;
+      }
+      .stButton > button:hover, .stFormSubmitButton > button:hover {
+        background: var(--app-blue-hover) !important;
+        border-color: var(--app-blue-hover) !important;
+      }
+
+      [data-testid="stMetric"],
+      [data-testid="stVerticalBlock"] div[data-testid="stExpander"],
+      [data-testid="stDataFrame"] {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+      }
+
+      input, textarea, select,
+      [data-baseweb="select"] > div,
+      [data-baseweb="input"] > div {
+        background: var(--bg-surface) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border) !important;
+      }
     </style>
     """,
     unsafe_allow_html=True,
@@ -99,26 +139,41 @@ with st.form("trip_form"):
         "Baltimore/Washington (BWI)": "BWI",
     }
 
-    search_c1, search_c2, search_c3, search_c4 = st.columns([2.3, 1.6, 1.2, 1.0])
-    with search_c1:
-        selected_origin_labels = st.multiselect("From", list(airport_label_to_code.keys()), default=["Washington Dulles (IAD)", "Washington Reagan National (DCA)"])
-        origins = [airport_label_to_code[x] for x in selected_origin_labels]
-    with search_c2:
-        d1, d2 = st.columns(2)
-        with d1:
-            start = st.date_input("Depart")
-        with d2:
-            end = st.date_input("Return")
-    with search_c3:
+    ctl_c1, ctl_c2, ctl_c3, ctl_c4 = st.columns([1.2, 1.0, 1.0, 1.0])
+    with ctl_c1:
+        trip_type = st.selectbox("Trip type", ["Round trip", "One way"], index=0)
+    with ctl_c2:
+        travelers = st.selectbox("Travelers", [1, 2, 3, 4, 5, 6], index=1)
+    with ctl_c3:
+        cabin = st.selectbox("Cabin", ["economy", "premium_economy", "business", "first"], index=0)
+    with ctl_c4:
         nights = st.slider("Nights", 3, 10, 5)
-        travelers = st.slider("Travelers", 1, 6, 2)
-    with search_c4:
+
+    route_c1, route_mid, route_c2 = st.columns([1.45, 0.2, 1.45])
+    with route_c1:
+        selected_origin_labels = st.multiselect(
+            "From",
+            list(airport_label_to_code.keys()),
+            default=["Washington Dulles (IAD)", "Washington Reagan National (DCA)"],
+        )
+        origins = [airport_label_to_code[x] for x in selected_origin_labels]
+    with route_mid:
+        st.markdown("<div style='text-align:center; padding-top:2.1rem; color:#64748b; font-size:1.4rem;'>⇄</div>", unsafe_allow_html=True)
+    with route_c2:
+        destination_hint = st.text_input("To destination (optional)", placeholder="e.g., Cancun, Lisbon, CUN")
+
+    date_c1, date_c2, date_c3 = st.columns([1.2, 1.2, 1.0])
+    with date_c1:
+        start = st.date_input("Depart")
+    with date_c2:
+        end = st.date_input("Return")
+    with date_c3:
         run = st.form_submit_button("Search Trips", use_container_width=True)
 
-    st.markdown("#### Filters")
+    st.markdown("#### Reward Points Optimization")
     f1, f2, f3 = st.columns(3)
     with f1:
-        max_hours = st.slider("Max travel time (hours)", 4.0, 16.0, 10.0)
+        max_hours = st.slider("Max travel time (hours)", 4, 16, 10, step=1)
         max_stops = st.selectbox("Stops", [0, 1, 2], index=1)
     with f2:
         vibe = st.multiselect("Destination style", ["warm beach", "south america", "eastern europe beach"], default=["warm beach"])
@@ -131,18 +186,21 @@ if run:
     if not origins:
         st.session_state.api_error = "Please select at least one origin airport."
         st.session_state.bundle = None
-    elif end < start:
-        st.session_state.api_error = "End date must be on or after start date."
+    elif trip_type == "Round trip" and end < start:
+        st.session_state.api_error = "Return date must be on or after departure date."
         st.session_state.bundle = None
     else:
         st.session_state.api_error = None
+        preferred_destinations = [x.strip() for x in destination_hint.split(",") if x.strip()] if destination_hint else []
         payload = {
             "origins": origins,
             "date_window_start": str(start),
-            "date_window_end": str(end),
+            "date_window_end": str(end if trip_type == "Round trip" else start),
             "duration_nights": nights,
-            "travelers": travelers,
+            "travelers": int(travelers),
+            "cabin_preference": cabin,
             "vibe_tags": vibe,
+            "preferred_destinations": preferred_destinations,
             "constraints": {"max_travel_hours": max_hours, "max_stops": int(max_stops), "nonstop_preferred": max_stops == 0},
             "balances": [
                 {"program": "MR", "balance": int(mr)},
@@ -171,8 +229,20 @@ if st.session_state.api_error:
 
 bundle = st.session_state.bundle
 destination_names = {
-    "CUN": "Cancún (CUN)", "PUJ": "Punta Cana (PUJ)", "NAS": "Nassau (NAS)",
-    "SDQ": "Santo Domingo (SDQ)", "LIS": "Lisbon (LIS)", "ATH": "Athens (ATH)",
+    "CUN": "Cancún (CUN)",
+    "PUJ": "Punta Cana (PUJ)",
+    "NAS": "Nassau (NAS)",
+    "SJD": "Los Cabos (SJD)",
+    "YVR": "Vancouver (YVR)",
+    "EZE": "Buenos Aires (EZE)",
+    "LIM": "Lima (LIM)",
+    "CDG": "Paris (CDG)",
+    "FCO": "Rome (FCO)",
+    "LHR": "London (LHR)",
+    "KEF": "Reykjavik (KEF)",
+    "ATH": "Athens (ATH)",
+    "HND": "Tokyo (HND)",
+    "BKK": "Bangkok (BKK)",
 }
 
 if not bundle:
