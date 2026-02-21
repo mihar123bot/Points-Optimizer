@@ -42,6 +42,12 @@ class RecommendationOption(BaseModel):
     score_final: float
     rationale: List[str]
     as_of: str
+    points_breakdown: dict = Field(default_factory=dict)
+    friction_components: dict = Field(default_factory=dict)
+    score_components: dict = Field(default_factory=dict)
+    marriott_points_eligible: bool = False
+    hotel_booking_mode: str = "cash"
+    source_timestamps: dict = Field(default_factory=dict)
 
 
 class RecommendationBundle(BaseModel):

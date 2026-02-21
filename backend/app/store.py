@@ -10,6 +10,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 TRIP_SEARCHES_FILE = DATA_DIR / "trip_searches.json"
 ALERTS_FILE = DATA_DIR / "alerts.json"
+RECOMMENDATIONS_FILE = DATA_DIR / "recommendations.json"
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -39,3 +40,11 @@ def load_alerts() -> dict[str, Any]:
 
 def save_alerts(data: dict[str, Any]) -> None:
     _save(ALERTS_FILE, data)
+
+
+def load_recommendations() -> dict[str, Any]:
+    return _load(RECOMMENDATIONS_FILE)
+
+
+def save_recommendations(data: dict[str, Any]) -> None:
+    _save(RECOMMENDATIONS_FILE, data)
