@@ -19,8 +19,16 @@ st.markdown(
         --border: #dbe2ea;
       }
 
-      .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
-        background: var(--bg-main) !important;
+      .stApp, [data-testid="stHeader"], [data-testid="stSidebar"] {
+        background: transparent !important;
+      }
+      [data-testid="stAppViewContainer"] {
+        background-image:
+          linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.28)),
+          url("assets/bg-polished.webp");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
       }
       .block-container { max-width: 1120px; padding-top: 1.2rem; }
 
@@ -35,6 +43,66 @@ st.markdown(
         border-radius: 20px;
         padding: 16px;
         margin-bottom: 12px;
+      }
+
+      /* Apple-style glass */
+      .glass {
+        background: rgba(255,255,255,0.18);
+        backdrop-filter: blur(18px) saturate(140%);
+        -webkit-backdrop-filter: blur(18px) saturate(140%);
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.35);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.25);
+        position: relative;
+        overflow: hidden;
+      }
+      .glass::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background-image: repeating-linear-gradient(
+          0deg,
+          rgba(255,255,255,0.035) 0px,
+          rgba(255,255,255,0.035) 1px,
+          rgba(0,0,0,0.02) 1px,
+          rgba(0,0,0,0.02) 2px
+        );
+        opacity: 0.06;
+        pointer-events: none;
+        mix-blend-mode: overlay;
+      }
+      .glass-hero {
+        background: linear-gradient(
+          rgba(255,255,255,0.22),
+          rgba(255,255,255,0.18)
+        );
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+      }
+
+      .logo-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.28);
+        backdrop-filter: blur(18px) saturate(140%);
+        -webkit-backdrop-filter: blur(18px) saturate(140%);
+        box-shadow: 0 12px 34px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.25);
+        position: relative;
+        overflow: hidden;
+      }
+      .logo-pill::before {
+        content: "";
+        position: absolute;
+        inset: -40% -20% auto -20%;
+        height: 80%;
+        background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%);
+        opacity: 0.35;
+        pointer-events: none;
       }
 
       .steps { display:flex; gap:8px; margin: 8px 0 20px 0; flex-wrap: wrap; }
@@ -448,13 +516,18 @@ if "bundle" not in st.session_state:
 if "api_error" not in st.session_state:
     st.session_state.api_error = None
 
-with st.container(border=True):
-    h1, h2 = st.columns([3, 1])
-    with h1:
-        st.image("assets/pointpilot_logo_primary.png", width=360)
-        st.caption("Fly smarter with points you already have.")
-    with h2:
-        st.image("assets/pointpilot_logo_icon.png", width=120)
+st.markdown(
+    """
+    <div class="glass glass-hero" style="padding:18px 20px;margin-bottom:16px;">
+      <div class="logo-pill" style="margin-bottom:10px;">
+        <span style="font-size:1.02rem;font-weight:600;color:#0f172a;">PointPilot</span>
+      </div>
+      <div style="font-size:1.35rem;font-weight:600;">Fly smarter with points you already have.</div>
+      <div style="opacity:.8;font-size:.92rem;">Find the best trip. Validate it live. Book with confidence.</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 render_steps(st.session_state.step)
 render_search()
