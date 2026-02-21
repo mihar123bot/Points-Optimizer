@@ -50,6 +50,11 @@ class RecommendationOption(BaseModel):
     hotel_booking_mode: str = "cash"
     points_strategy: str = "none"
     cpp_threshold: float = 1.0
+    cash_flights_mode: str = "ESTIMATED"
+    cash_hotels_mode: str = "ESTIMATED"
+    award_mode: str = "ESTIMATED"
+    award_details: dict = Field(default_factory=dict)
+    validation_steps: List[str] = Field(default_factory=list)
     source_timestamps: dict = Field(default_factory=dict)
     source_labels: dict = Field(default_factory=dict)
     api_mode: str = "fallback"

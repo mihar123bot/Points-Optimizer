@@ -34,12 +34,18 @@ def generate_destination_candidates(payload: dict[str, Any]) -> list[dict[str, A
     vibe_tags = [v.lower().strip() for v in payload.get("vibe_tags", []) if str(v).strip()]
     preferred = [d.lower().strip() for d in payload.get("preferred_destinations", []) if str(d).strip()]
 
+    wants_beach_warm = any(v in {"beach", "warm", "warm beach"} for v in vibe_tags)
+
     out: list[dict[str, Any]] = []
     for d in DESTINATION_POOL:
         if d["travel_hours"] > max_hours or d["stops"] > max_stops:
             continue
 
-        if vibe_tags and not any(v in d["region"] for v in vibe_tags):
+        # Beach/warm should not drift to off-vibe defaults.
+        if wants_beach_warm and not ("beach" in d["region"] or "warm" in d["region"]):
+            continue
+
+        if vibe_tags and not wants_beach_warm and not any(v in d["region"] for v in vibe_tags):
             continue
 
         if preferred:

@@ -81,8 +81,23 @@ def pretty_option_id(option_id: str) -> str:
 
 
 def render_playbook(opt: dict, dest_label: str):
+    alternates = opt.get("points_breakdown", {}).get("points_strategy_alternates", [])
+    selected_strategy = None
+    if alternates:
+        selected_strategy = st.radio(
+            "Points strategy scenario",
+            options=alternates,
+            index=0,
+            horizontal=True,
+            key=f"strategy-{opt['id']}",
+            format_func=lambda x: "Use points on flights" if x == "flight" else "Use points on hotels",
+        )
+
     if st.button(f"Open Booking Plan for {pretty_option_id(opt['id'])}", key=f"pb-{opt['id']}", use_container_width=True):
-        pb = requests.post(f"{API_BASE}/v1/playbook/generate", json={"option_id": opt["id"]}, timeout=20)
+        payload = {"option_id": opt["id"]}
+        if selected_strategy:
+            payload["points_strategy_override"] = selected_strategy
+        pb = requests.post(f"{API_BASE}/v1/playbook/generate", json=payload, timeout=20)
         if not pb.ok:
             st.error("Could not generate booking plan right now.")
             return
@@ -253,10 +268,12 @@ else:
     if live_count > 0:
         st.success(f"API Mode: LIVE ({live_count}/{len(options)} options using live provider data)")
     else:
-        st.warning("API Mode: FALLBACK (using estimator/mock data). Add AMADEUS_CLIENT_ID/SECRET to enable live data.")
+        st.warning("API Mode: FALLBACK (using estimator/mock data). Add AMADEUS_CLIENT_ID/SECRET and optional SEATS_AERO settings to enable live award validation.")
+
+    ui_mode = st.radio("View mode", options=["Simple", "Nerd"], index=0, horizontal=True)
 
     st.markdown("### Step 2 · Decision View")
-    st.caption("Simple mode: top 3 options only. Use Advanced Details for deep analysis.")
+    st.caption("Simple mode: top 3 options only. Use Nerd mode for full scoring and source internals.")
 
     top3 = options[:3]
     for opt in top3:
@@ -268,39 +285,59 @@ else:
             c.metric("CPP", f"{opt.get('cpp_blended_capped', 0):.2f}¢")
             d.metric("Stops", opt.get("friction_components", {}).get("stops_penalty", 0) / 2)
             st.write("Why:", ", ".join(opt.get("rationale", [])))
+            st.caption(
+                f"Component modes — Flights: {opt.get('cash_flights_mode','ESTIMATED')} · Hotels: {opt.get('cash_hotels_mode','ESTIMATED')} · Awards: {opt.get('award_mode','ESTIMATED')}"
+            )
+            if opt.get("award_mode", "ESTIMATED") != "LIVE":
+                st.info("Award values are estimated for this option (live award source unavailable, quota-limited, or not configured).")
+
+            with st.expander("Validate this award"):
+                for step in opt.get("validation_steps", []):
+                    st.write(f"- {step}")
+                award_src = opt.get("award_details", {}).get("source_url")
+                if award_src:
+                    st.write(f"Source link: {award_src}")
+                st.caption(f"As of: {opt.get('award_details', {}).get('retrieved_at', opt.get('as_of', '-'))}")
+
             render_playbook(opt, dest_label)
 
-    with st.expander("Advanced Details"):
-        st.markdown("#### Compare Selected")
-        compare_ids = st.multiselect("Select up to 3 options", options=[o["id"] for o in options], format_func=pretty_option_id, max_selections=3)
-        if compare_ids:
-            selected = [o for o in options if o["id"] in compare_ids]
-            st.dataframe([
-                {
-                    "Option": pretty_option_id(o["id"]),
-                    "Destination": destination_names.get(o["destination"], o["destination"]),
-                    "OOP": round(o["oop_total"], 2),
-                    "Flight CPP": o.get("cpp_flight"),
-                    "Hotel CPP": o.get("cpp_hotel"),
-                    "Blended CPP": o.get("cpp_blended_capped"),
-                    "Score": round(o.get("score_final", 0), 3),
-                    "Hotel Mode": o.get("hotel_booking_mode", "cash"),
-                } for o in selected
-            ], use_container_width=True, hide_index=True)
+    if ui_mode == "Nerd":
+        with st.expander("Advanced Details", expanded=True):
+            st.markdown("#### Compare Selected")
+            compare_ids = st.multiselect("Select up to 3 options", options=[o["id"] for o in options], format_func=pretty_option_id, max_selections=3)
+            if compare_ids:
+                selected = [o for o in options if o["id"] in compare_ids]
+                st.dataframe([
+                    {
+                        "Option": pretty_option_id(o["id"]),
+                        "Destination": destination_names.get(o["destination"], o["destination"]),
+                        "OOP": round(o["oop_total"], 2),
+                        "Flight CPP": o.get("cpp_flight"),
+                        "Hotel CPP": o.get("cpp_hotel"),
+                        "Blended CPP": o.get("cpp_blended_capped"),
+                        "Score": round(o.get("score_final", 0), 3),
+                        "Flight Mode": o.get("cash_flights_mode", "ESTIMATED"),
+                        "Hotel Mode": o.get("cash_hotels_mode", "ESTIMATED"),
+                        "Award Mode": o.get("award_mode", "ESTIMATED"),
+                    } for o in selected
+                ], use_container_width=True, hide_index=True)
 
-        st.markdown("#### Full Ranked List")
-        for opt in options:
-            with st.container(border=True):
-                dest_label = destination_names.get(opt["destination"], opt["destination"])
-                st.markdown(f"**{pretty_option_id(opt['id'])} · {dest_label}**")
-                st.caption(f"OOP ${opt['oop_total']:.0f} · Flight CPP {opt.get('cpp_flight',0):.2f}¢ · Hotel CPP {opt.get('cpp_hotel',0):.2f}¢")
-                with st.expander("Score transparency"):
-                    st.json({
-                        "points_breakdown": opt.get("points_breakdown", {}),
-                        "friction_components": opt.get("friction_components", {}),
-                        "score_components": opt.get("score_components", {}),
-                        "source_timestamps": opt.get("source_timestamps", {}),
-                        "source_labels": opt.get("source_labels", {}),
-                        "api_mode": opt.get("api_mode", "fallback"),
-                        "marriott_points_eligible": opt.get("marriott_points_eligible", False),
-                    })
+            st.markdown("#### Full Ranked List")
+            for opt in options:
+                with st.container(border=True):
+                    dest_label = destination_names.get(opt["destination"], opt["destination"])
+                    st.markdown(f"**{pretty_option_id(opt['id'])} · {dest_label}**")
+                    st.caption(f"OOP ${opt['oop_total']:.0f} · Flight CPP {opt.get('cpp_flight',0):.2f}¢ · Hotel CPP {opt.get('cpp_hotel',0):.2f}¢")
+                    st.caption(f"Modes → flights: {opt.get('cash_flights_mode','ESTIMATED')}, hotels: {opt.get('cash_hotels_mode','ESTIMATED')}, award: {opt.get('award_mode','ESTIMATED')}")
+                    with st.expander("Score transparency"):
+                        st.json({
+                            "points_breakdown": opt.get("points_breakdown", {}),
+                            "friction_components": opt.get("friction_components", {}),
+                            "score_components": opt.get("score_components", {}),
+                            "source_timestamps": opt.get("source_timestamps", {}),
+                            "source_labels": opt.get("source_labels", {}),
+                            "award_details": opt.get("award_details", {}),
+                            "validation_steps": opt.get("validation_steps", []),
+                            "api_mode": opt.get("api_mode", "fallback"),
+                            "marriott_points_eligible": opt.get("marriott_points_eligible", False),
+                        })

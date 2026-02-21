@@ -69,14 +69,24 @@ def generate_recommendations(req: GenerateRequest):
         flight_cpp_ok = cpp_flight > cpp_threshold
         hotel_cpp_ok = cpp_hotel > cpp_threshold
 
-        if flight_cpp_ok and hotel_cpp_ok:
-            use_points_for = "flight" if cpp_flight >= cpp_hotel else "hotel"
+        cash_flights_mode = "LIVE" if airfare.get("source") == "amadeus_test" else "ESTIMATED"
+        cash_hotels_mode = "LIVE" if hotel.get("source") == "amadeus_test" else "ESTIMATED"
+        award_mode = "LIVE" if award.get("source") == "seats_aero_live" else "ESTIMATED"
+        award_live = award_mode == "LIVE"
+
+        # P0 rule: prefer points on flights when live award inventory exists and CPP>1.0.
+        if award_live and flight_cpp_ok:
+            use_points_for = "flight"
+        elif hotel_cpp_ok and ((not award_live) or (not flight_cpp_ok)):
+            use_points_for = "hotel"
         elif flight_cpp_ok:
             use_points_for = "flight"
-        elif hotel_cpp_ok:
-            use_points_for = "hotel"
         else:
             use_points_for = "none"
+
+        points_strategy_alternates = []
+        if award_live and flight_cpp_ok and hotel_cpp_ok:
+            points_strategy_alternates = ["flight", "hotel"]
 
         if use_points_for == "flight":
             oop_total = round(taxes_fees + hotel_cash, 2)
@@ -89,6 +99,8 @@ def generate_recommendations(req: GenerateRequest):
         marriott_cpp_eligible = hotel_cpp_ok
 
         cpp_blended = min(round((cpp_flight + max(cpp_hotel, 0.0)) / 2.0, 2), 5.0)
+        if award_live:
+            cpp_blended = min(5.0, round(cpp_blended + 0.15, 2))
         friction_components = {
             "stops_penalty": c["stops"] * 2.0,
             "travel_time_penalty": max(0.0, c["travel_hours"] - 7.0) * 0.5,
@@ -106,6 +118,13 @@ def generate_recommendations(req: GenerateRequest):
         option_id = f"{req.trip_search_id[:8]}-opt-{i}"
         suggested_flight_program = "MR" if balances.get("MR", 0) >= balances.get("CAP1", 0) else "CAP1"
 
+        validation_steps = [
+            f"Open the award source/site for {award.get('program', 'program search')}.",
+            f"Search {origin} → {destination} in {cabin} cabin for {depart_date} (and return {return_date} if round trip).",
+            f"Compare points ({flight_points_required}) and taxes/fees (${taxes_fees:.2f}) with this result.",
+            f"Confirm as-of timestamp: {award.get('retrieved_at', now)}.",
+        ]
+
         rec_store[option_id] = {
             "option_id": option_id,
             "trip_search_id": req.trip_search_id,
@@ -122,7 +141,22 @@ def generate_recommendations(req: GenerateRequest):
             "marriott_cpp_eligible": marriott_cpp_eligible,
             "hotel_booking_mode": hotel_mode,
             "points_strategy": use_points_for,
+            "points_strategy_alternates": points_strategy_alternates,
             "cpp_threshold": cpp_threshold,
+            "cash_flights_mode": cash_flights_mode,
+            "cash_hotels_mode": cash_hotels_mode,
+            "award_mode": award_mode,
+            "award_details": {
+                "program": award.get("program"),
+                "cabin": cabin,
+                "points": flight_points_required,
+                "taxes_fees": taxes_fees,
+                "availability": award.get("availability_indicator", "unknown"),
+                "retrieved_at": award.get("retrieved_at", now),
+                "source_label": award.get("source", "unknown"),
+                "source_url": award.get("source_url", ""),
+            },
+            "validation_steps": validation_steps,
             "as_of": now,
         }
 
@@ -139,6 +173,7 @@ def generate_recommendations(req: GenerateRequest):
                     f"{c['stops']} stop(s)",
                     f"{c['travel_hours']}h total travel",
                     f"Points strategy: {use_points_for}",
+                    f"Award mode: {award_mode}",
                 ],
                 as_of=now,
                 points_breakdown={
@@ -151,6 +186,7 @@ def generate_recommendations(req: GenerateRequest):
                     "hotel_cpp": round(cpp_hotel, 3),
                     "cpp_threshold": cpp_threshold,
                     "points_strategy": use_points_for,
+                    "points_strategy_alternates": points_strategy_alternates,
                 },
                 friction_components=friction_components,
                 score_components=score_components,
@@ -158,6 +194,20 @@ def generate_recommendations(req: GenerateRequest):
                 hotel_booking_mode=hotel_mode,
                 points_strategy=use_points_for,
                 cpp_threshold=cpp_threshold,
+                cash_flights_mode=cash_flights_mode,
+                cash_hotels_mode=cash_hotels_mode,
+                award_mode=award_mode,
+                award_details={
+                    "program": award.get("program"),
+                    "cabin": cabin,
+                    "points": flight_points_required,
+                    "taxes_fees": round(taxes_fees, 2),
+                    "availability": award.get("availability_indicator", "unknown"),
+                    "retrieved_at": award.get("retrieved_at", now),
+                    "source_label": award.get("source", "unknown"),
+                    "source_url": award.get("source_url", ""),
+                },
+                validation_steps=validation_steps,
                 source_timestamps={
                     "award": award["as_of"],
                     "airfare": airfare["as_of"],
@@ -170,7 +220,7 @@ def generate_recommendations(req: GenerateRequest):
                 },
                 api_mode=(
                     "live"
-                    if (airfare.get("source") == "amadeus_test" or hotel.get("source") == "amadeus_test")
+                    if (cash_flights_mode == "LIVE" or cash_hotels_mode == "LIVE" or award_mode == "LIVE")
                     else "fallback"
                 ),
             )

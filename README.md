@@ -23,7 +23,8 @@ No auto-booking is performed.
 - Streamlit app with a decision-first UI:
   - Step 1: Search Trips
   - Step 2: Decision View (top 3 options)
-  - Advanced Details (compare + transparency)
+  - View mode toggle: Simple (default) / Nerd
+  - Advanced Details (compare + transparency in Nerd mode)
 - Optional destination hint input (`To destination (optional)`)
 - Dynamic playbook logic (no longer static template)
 - Option compare mode (up to 3 options)
@@ -34,9 +35,10 @@ No auto-booking is performed.
   - score components
   - source timestamps/labels
 - CPP rule enforcement updated:
-  - points are considered only when CPP > 1.0 (flight and hotel)
-  - if both flight and hotel CPP are > 1.0, points are applied to the side with higher CPP
-  - the other side defaults to cash for that option
+  - points are considered when CPP > 1.0 (flight and hotel)
+  - if LIVE flight award inventory exists and flight CPP > 1.0, default strategy prefers points on flights
+  - hotels use points when hotel CPP > 1.0 and flight award is unavailable/weak
+  - when both are eligible with LIVE award data, UI supports scenario toggle (flight vs hotel points)
 - API mode status in UI:
   - `LIVE` when real provider data is used
   - `FALLBACK` when estimator/mock data is used
@@ -44,8 +46,8 @@ No auto-booking is performed.
 ### Data/provider mode
 - **Cash flights:** Free-tier Amadeus test API path implemented (if keys provided)
 - **Hotels:** Free-tier Amadeus test API path implemented (if keys provided)
-- **Award points availability:** MVP estimator fallback (real free award API is limited/gated)
-- If Amadeus credentials are missing or API call fails, app gracefully falls back to mock/estimator paths.
+- **Award points availability:** Live adapter hook supported via configurable Seats.aero-style endpoint (`SEATS_AERO_API_KEY` + `SEATS_AERO_URL`) with estimator fallback
+- If provider credentials are missing or a call fails/quota-limits, app gracefully falls back to estimator mode with clear labeling.
 
 ---
 
@@ -154,11 +156,13 @@ pip install -r requirements.txt
 
 ## 2) Environment variables
 
-Create env vars (or a `.env` in `backend/`) for live Amadeus path:
+Create env vars (or a `.env` in `backend/`) for live provider paths:
 
 ```bash
 AMADEUS_CLIENT_ID=your_id
 AMADEUS_CLIENT_SECRET=your_secret
+SEATS_AERO_API_KEY=your_key_optional
+SEATS_AERO_URL=https://your-award-endpoint.example.com/search
 ```
 
 Optional:
@@ -221,7 +225,7 @@ Open:
 ## Known limitations
 
 - Amadeus test environment has quota/coverage limitations
-- Award inventory is not from a dedicated live award API yet
+- Award inventory can run in live mode only when a compatible award endpoint is configured; otherwise estimator mode is used
 - Local JSON storage is fine for MVP but not multi-user production
 - No auth/user accounts yet
 - No booking automation by design

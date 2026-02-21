@@ -37,11 +37,48 @@ def _amadeus_token() -> str | None:
 
 
 class AwardProvider:
-    """MVP fallback model for points cost when no free award API is available."""
+    """Award inventory: tries configured live source, then falls back to estimator."""
 
     def search(self, origin: str, destination: str, travelers: int, cabin: str = "economy") -> dict[str, Any]:
         now = _now()
-        # Real award APIs are typically paid/gated. Use conservative heuristic for MVP.
+
+        seats_key = os.getenv("SEATS_AERO_API_KEY")
+        seats_url = os.getenv("SEATS_AERO_URL", "").strip()
+        if seats_key and seats_url:
+            try:
+                r = requests.get(
+                    seats_url,
+                    params={
+                        "origin": origin,
+                        "destination": destination,
+                        "cabin": cabin,
+                        "pax": max(1, int(travelers)),
+                    },
+                    headers={"Authorization": f"Bearer {seats_key}"},
+                    timeout=15,
+                )
+                r.raise_for_status()
+                payload = r.json()
+                items = payload.get("data", payload if isinstance(payload, list) else [])
+                if items:
+                    first = items[0]
+                    points = int(first.get("points", first.get("miles", 0)) or 0)
+                    taxes = float(first.get("taxes", first.get("taxes_fees", 0)) or 0)
+                    if points > 0:
+                        return {
+                            "points_cost": points,
+                            "taxes_fees": taxes,
+                            "program": str(first.get("program", "MR")),
+                            "availability_indicator": str(first.get("availability", "available")),
+                            "source_url": str(first.get("url", seats_url)),
+                            "retrieved_at": now,
+                            "as_of": now,
+                            "source": "seats_aero_live",
+                        }
+            except Exception:
+                pass
+
+        # Fallback estimator
         base_cpp = 1.6 if cabin == "economy" else 2.0
         est_cash = 450 + (hash(origin + destination) % 250)
         taxes = float(95 + (hash(destination) % 70))
@@ -50,6 +87,9 @@ class AwardProvider:
             "points_cost": points,
             "taxes_fees": taxes,
             "program": "MR",
+            "availability_indicator": "estimated",
+            "source_url": "",
+            "retrieved_at": now,
             "as_of": now,
             "source": "award_estimator_mvp",
         }

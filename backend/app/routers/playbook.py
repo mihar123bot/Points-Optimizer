@@ -8,6 +8,7 @@ router = APIRouter()
 
 class PlaybookRequest(BaseModel):
     option_id: str
+    points_strategy_override: str | None = None
 
 
 @router.post('/generate', response_model=PlaybookResponse)
@@ -26,6 +27,10 @@ def generate_playbook(req: PlaybookRequest):
     flight_points_required = int(rec.get("flight_points_required", 0))
     hotel_points_required = int(rec.get("hotel_points_required", 0))
     points_strategy = rec.get("points_strategy", "none")
+    alternates = rec.get("points_strategy_alternates", [])
+    if req.points_strategy_override in ("flight", "hotel", "none"):
+        if not alternates or req.points_strategy_override in alternates or req.points_strategy_override == "none":
+            points_strategy = req.points_strategy_override
     cpp_threshold = float(rec.get("cpp_threshold", 1.0))
 
     transfer_steps = [
@@ -80,6 +85,11 @@ def generate_playbook(req: PlaybookRequest):
         ])
 
     booking_steps.append("Take screenshots of final totals before checkout for tracking.")
+    for step in rec.get("validation_steps", []):
+        booking_steps.append(f"Validate: {step}")
+    source_url = rec.get("award_details", {}).get("source_url")
+    if source_url:
+        booking_steps.append(f"Validation link: {source_url}")
 
     fallbacks = [
         "Try ±1 day on departure and return dates.",
