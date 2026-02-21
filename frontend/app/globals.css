@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  min-height: 100vh;
+  color: #0f172a;
+  background: #f8fbff;
+}
+
+.hero-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(to bottom, rgba(20,40,60,0.35), rgba(20,40,60,0.2)),
+    url('/bg-polished.webp');
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px) brightness(0.9);
+  transform: scale(1.04);
+  z-index: -2;
+}
+
+.glass {
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 18px;
+}
+
+.search-tray {
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.28);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 18px;
+}
+
+.control {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.24);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e3a5f;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.btn-primary {
+  height: 40px;
+  border-radius: 999px;
+  border: 0;
+  color: #fff;
+  padding: 0 26px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  box-shadow: 0 6px 18px rgba(59,130,246,0.35);
+}
