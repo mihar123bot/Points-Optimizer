@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.domain.models import PlaybookResponse
@@ -177,7 +178,7 @@ COMPARE_URLS = [
 
 class PlaybookRequest(BaseModel):
     option_id: str
-    points_strategy_override: str | None = None
+    points_strategy_override: Optional[str] = None
 
 
 @router.post('/generate', response_model=PlaybookResponse)

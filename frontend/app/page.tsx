@@ -343,12 +343,12 @@ export default function HomePage() {
                   />
                 </div>
 
-                {/* Date row */}
+                {/* Date + Nights + Max hours row */}
                 <div className={`s-date-row${tripType === 'oneway' ? ' s-date-row-single' : ''}`}>
                   <div className="s-field">
                     <label className="s-label">Depart</label>
                     <input
-                      className="s-input"
+                      className="s-input s-input-date"
                       type="date"
                       value={start}
                       onChange={(e) => setStart(e.target.value)}
@@ -358,21 +358,17 @@ export default function HomePage() {
                     <div className="s-field">
                       <label className="s-label">Return</label>
                       <input
-                        className="s-input"
+                        className="s-input s-input-date"
                         type="date"
                         value={end}
                         onChange={(e) => setEnd(e.target.value)}
                       />
                     </div>
                   )}
-                </div>
-
-                {/* Nights + Max travel hours */}
-                <div className="grid grid-cols-2 gap-3 mb-3">
                   <div className="s-field">
                     <label className="s-label">Nights</label>
                     <input
-                      className="s-input"
+                      className="s-input s-input-compact"
                       type="number"
                       min={2}
                       max={14}
@@ -381,9 +377,9 @@ export default function HomePage() {
                     />
                   </div>
                   <div className="s-field">
-                    <label className="s-label">Max travel hours</label>
+                    <label className="s-label">Max hrs</label>
                     <input
-                      className="s-input"
+                      className="s-input s-input-compact"
                       type="number"
                       min={4}
                       max={16}

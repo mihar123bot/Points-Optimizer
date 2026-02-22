@@ -236,16 +236,30 @@ body {
   margin-bottom: 12px;
 }
 
-/* Date row */
+/* Date + Nights + Max hrs row (4 cols: date | date | nights | hours) */
 .s-date-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.15fr 1.15fr 0.7fr 0.7fr;
   gap: 8px;
   margin-bottom: 12px;
 }
 
+/* One-way: date | nights | hours */
 .s-date-row.s-date-row-single {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1.6fr 0.7fr 0.7fr;
+}
+
+/* Date input — tighter padding so the value fits cleanly */
+.s-input-date {
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+/* Compact number input — centered value */
+.s-input-compact {
+  padding: 0 10px;
+  font-size: 15px;
+  text-align: center;
 }
 
 /* Swap button */
@@ -637,6 +651,16 @@ body {
 
   .s-route-row {
     grid-template-columns: 1fr auto 1fr;
+  }
+
+  /* Stack dates on top row, nights/hours on bottom */
+  .s-date-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .s-date-row.s-date-row-single {
+    grid-template-columns: 1fr 1fr;
   }
 
   .deals-shell {
