@@ -22,11 +22,11 @@ PointPilot is a points-first trip planning app. Enter your loyalty points balanc
 - **Next.js 14 + TypeScript** in `frontend/`
 - Glassmorphic hero UI — blurred background, dark glass search panel
 - Tagline and step breadcrumb reflect the 3-step Explore → Discover → Capitalize flow
-- Search form embedded inside the hero glass card (no separate tray)
+- Search form embedded inside the hero glass card
 
 ### Search UI
-- **Round trip / Travelers / Cabin** — all selectable in the top row
-- Route row: From + swap + To
+- **Round trip / Travelers** — selectable in the top row
+- Route row: From (multi-airport) + swap + To (optional, leave blank to explore all)
 - Date row: Depart + Return
 - Nights + Max travel hours
 - **Points & Programs** — 3 collapsible program buckets (select program + enter balance)
@@ -39,9 +39,6 @@ PointPilot is a points-first trip planning app. Enter your loyalty points balanc
 - Scoring: OOP (50%) + CPP (35%) + Friction (15%)
 - Graceful degradation — live APIs (SeatsAero, Amadeus) with mock fallback
 - Local JSON persistence (`data/*.json`) — MVP-grade
-
-### Legacy
-- Streamlit app (`app.py`) kept for fallback/testing only
 
 ---
 
@@ -63,7 +60,8 @@ PointPilot is a points-first trip planning app. Enter your loyalty points balanc
 
 ## MVP Constraints
 
-**Origins** — US airports only: IAD, DCA, BWI, JFK, EWR, BOS, LAX, SFO, ORD, ATL, MIA, DFW, SEA
+**Origins** — US airports:
+`IAD, DCA, BWI, DFW, DAL, JFK, LGA, EWR, IAH, HOU, BOS, LAX, SFO, ORD, ATL, MIA, SEA`
 
 **Destinations** — 14 destinations:
 `CUN, PUJ, NAS, SJD, YVR, EZE, LIM, CDG, FCO, LHR, KEF, ATH, HND, BKK`
