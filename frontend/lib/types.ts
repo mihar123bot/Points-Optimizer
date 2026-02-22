@@ -35,7 +35,7 @@ export type TripSearchPayload = {
     nonstop_preferred: boolean;
   };
   balances: Array<{
-    program: 'MR' | 'CAP1' | 'MARRIOTT';
+    program: 'MR' | 'CAP1';
     balance: number;
   }>;
 };
@@ -57,6 +57,8 @@ export type RecommendationOption = {
   country?: string;          // e.g. "France"
   airline?: string;          // e.g. "Air France"
   duration?: string;         // e.g. "7h 50m"
+  depart_date?: string;      // optimal departure e.g. "2026-07-03"
+  return_date?: string;      // optimal return e.g. "2026-07-07"
   cash_price_pp?: number;    // cash price per person
   // Points details
   points_strategy?: string;

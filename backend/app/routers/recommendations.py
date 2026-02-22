@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 import time
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -76,6 +76,23 @@ def generate_recommendations(req: GenerateRequest):
     depart_date = str(payload.get("date_window_start"))
     return_date = str(payload.get("date_window_end"))
 
+    # Compute latest valid departure date so the trip fits within the window.
+    # window_end_depart = window_end - duration_nights
+    # e.g. window Jul 1–15, 4 nights → latest depart = Jul 11
+    try:
+        window_start_dt = date.fromisoformat(depart_date)
+        window_end_dt = date.fromisoformat(return_date)
+        latest_depart_dt = window_end_dt - timedelta(days=nights)
+        window_end_depart = latest_depart_dt.isoformat() if latest_depart_dt >= window_start_dt else depart_date
+        # Default: midpoint of valid departure window
+        mid_days = max(0, (latest_depart_dt - window_start_dt).days // 2)
+        default_depart = (window_start_dt + timedelta(days=mid_days)).isoformat()
+        default_return = (date.fromisoformat(default_depart) + timedelta(days=nights)).isoformat()
+    except Exception:
+        window_end_depart = depart_date
+        default_depart = depart_date
+        default_return = return_date
+
     award_provider = AwardProvider()
     airfare_provider = AirfareProvider()
     hotel_provider = HotelProvider()
@@ -86,7 +103,7 @@ def generate_recommendations(req: GenerateRequest):
 
     for i, c in enumerate(candidates[:8], start=1):
         destination = c["code"]
-        airfare = airfare_provider.search(origin, destination, travelers, depart_date=depart_date, return_date=return_date)
+        airfare = airfare_provider.search(origin, destination, travelers, depart_date=default_depart, return_date=default_return)
         hotel = hotel_provider.search(destination, nights, travelers)
 
         cash_flight = float(airfare["cash_price_total"])
@@ -156,6 +173,8 @@ def generate_recommendations(req: GenerateRequest):
                     country=country,
                     airline=airline,
                     duration=duration,
+                    depart_date=default_depart,
+                    return_date=default_return,
                     cash_price_pp=cash_price_pp,
                     friction_components=friction_components,
                     points_strategy="none",
@@ -169,7 +188,14 @@ def generate_recommendations(req: GenerateRequest):
         else:
             # Points mode: optimize award redemption vs cash
             award = award_provider.search(origin, destination, travelers, cabin=cabin,
-                                          depart_date=depart_date, return_date=return_date)
+                                          depart_date=depart_date, return_date=return_date,
+                                          window_end=window_end_depart, duration_nights=nights)
+            # Use the award-optimized departure date (cheapest in window)
+            opt_depart = award.get("depart_date") or default_depart
+            try:
+                opt_return = (date.fromisoformat(opt_depart) + timedelta(days=nights)).isoformat()
+            except Exception:
+                opt_return = default_return
             flight_points_required = int(award["points_cost"])
             taxes_fees = float(award["taxes_fees"])
             award_mode = "LIVE" if award.get("source") == "seats_aero_live" else "ESTIMATED"
@@ -222,7 +248,7 @@ def generate_recommendations(req: GenerateRequest):
 
             validation_steps = [
                 f"Open the award source/site for {award.get('program', 'program search')}.",
-                f"Search {origin} → {destination} in {cabin} cabin for {depart_date} (return {return_date}).",
+                f"Search {origin} → {destination} in {cabin} cabin for {opt_depart} (return {opt_return}).",
                 f"Confirm {flight_points_required:,} pts + ${taxes_fees:.0f} taxes matches this result.",
                 f"Data as of: {award.get('retrieved_at', now)}.",
             ]
@@ -322,6 +348,8 @@ def generate_recommendations(req: GenerateRequest):
                     country=country,
                     airline=airline,
                     duration=duration,
+                    depart_date=opt_depart,
+                    return_date=opt_return,
                     cash_price_pp=cash_price_pp,
                     points_breakdown={
                         "flight_program": suggested_flight_program,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import requests
@@ -143,6 +143,49 @@ _AWARD_CACHE_TTL   = 7200    # 2 hours — Seats.aero
 _AIRFARE_CACHE_TTL = 43200   # 12 hours — Amadeus flights
 
 # Seats.aero source → human-readable program name mapping (partial)
+# IATA carrier code → full airline name
+_IATA_TO_AIRLINE: dict[str, str] = {
+    "AA": "American Airlines",
+    "AC": "Air Canada",
+    "AF": "Air France",
+    "AV": "Avianca",
+    "AZ": "ITA Airways",
+    "B6": "JetBlue",
+    "BA": "British Airways",
+    "CM": "Copa Airlines",
+    "DL": "Delta",
+    "EK": "Emirates",
+    "EY": "Etihad",
+    "FI": "Icelandair",
+    "IB": "Iberia",
+    "JL": "JAL",
+    "KL": "KLM",
+    "LA": "LATAM",
+    "LH": "Lufthansa",
+    "MH": "Malaysia Airlines",
+    "MU": "China Eastern",
+    "NH": "ANA",
+    "NZ": "Air New Zealand",
+    "OS": "Austrian",
+    "OZ": "Asiana",
+    "PR": "Philippine Airlines",
+    "QF": "Qantas",
+    "QR": "Qatar Airways",
+    "SK": "SAS",
+    "SQ": "Singapore Airlines",
+    "SU": "Aeroflot",
+    "TG": "Thai Airways",
+    "TK": "Turkish Airlines",
+    "TP": "TAP Air Portugal",
+    "UA": "United",
+    "VS": "Virgin Atlantic",
+    "VX": "Virgin America",
+    "WN": "Southwest",
+    "AS": "Alaska Airlines",
+    "A3": "Aegean Airlines",
+}
+
+
 _SEATS_SOURCE_TO_PROGRAM: dict[str, str] = {
     "aeroplan":       "Air Canada Aeroplan",
     "flyingblue":     "Flying Blue",
@@ -203,6 +246,8 @@ class AwardProvider:
         cabin: str = "economy",
         depart_date: str = "",
         return_date: str = "",
+        window_end: str = "",
+        duration_nights: int = 5,
     ) -> dict[str, Any]:
         now = _now()
         now_ts = time.time()
@@ -264,9 +309,34 @@ class AwardProvider:
                         cost_field   = "YMileageCostRaw"
                         tax_field    = "YTotalTaxesRaw"
 
+                # Filter items to those whose departure date falls within the valid window:
+                # departure must be >= depart_date and <= (window_end - duration_nights)
+                if available_items and window_end and duration_nights:
+                    try:
+                        win_start_dt = datetime.strptime(depart_date, "%Y-%m-%d").date()
+                        win_end_dt = datetime.strptime(window_end, "%Y-%m-%d").date()
+                        latest_depart_dt = win_end_dt - timedelta(days=duration_nights)
+                        date_filtered = [
+                            x for x in available_items
+                            if x.get("Date")
+                            and win_start_dt
+                            <= datetime.strptime(x["Date"][:10], "%Y-%m-%d").date()
+                            <= latest_depart_dt
+                        ]
+                        if date_filtered:
+                            available_items = date_filtered
+                    except Exception:
+                        pass
+
                 if available_items:
                     # Pick cheapest by mileage cost for requested cabin
                     best = min(available_items, key=lambda x: int(x.get(cost_field) or 999_999_999))
+
+                    # Extract the actual departure date from this result
+                    best_depart_date = depart_date
+                    raw_date = best.get("Date", "")
+                    if raw_date and len(raw_date) >= 10:
+                        best_depart_date = raw_date[:10]
 
                     points = int(best.get(cost_field) or 0)
                     # Taxes stored in cents in Seats.aero response
@@ -288,7 +358,8 @@ class AwardProvider:
 
                     # Extract operating airline from YAirlines field (comma-sep IATA codes)
                     airlines_str = str(best.get("YAirlines") or "")
-                    operating_carrier = airlines_str.split(",")[0].strip() if airlines_str else ""
+                    raw_carrier = airlines_str.split(",")[0].strip() if airlines_str else ""
+                    operating_carrier = _IATA_TO_AIRLINE.get(raw_carrier, raw_carrier)
 
                     # Optionally fetch flight-level data for exact matching
                     avail_id = best.get("ID") or ""
@@ -332,6 +403,8 @@ class AwardProvider:
                             "flight_number":          flight_number,
                             "exact_flight_match":     exact_match,
                             "retrieved_at_ts":        retrieved_at_ts,
+                            # Date optimization
+                            "depart_date":            best_depart_date,
                         }
                         _AWARD_CACHE[cache_key] = (now_ts, result)
                         return result
@@ -358,6 +431,19 @@ class AwardProvider:
 
         airline = _pick(route.get("airlines", ["United"]), seed)
 
+        # For estimator, pick the midpoint of the valid departure window
+        est_depart_date = depart_date
+        if depart_date and window_end and duration_nights:
+            try:
+                start_dt = datetime.strptime(depart_date, "%Y-%m-%d").date()
+                end_dt = datetime.strptime(window_end, "%Y-%m-%d").date()
+                latest_depart_dt = end_dt - timedelta(days=duration_nights)
+                if latest_depart_dt >= start_dt:
+                    mid_days = (latest_depart_dt - start_dt).days // 2
+                    est_depart_date = (start_dt + timedelta(days=mid_days)).isoformat()
+            except Exception:
+                pass
+
         return {
             "points_cost":            max(10000, pts),
             "taxes_fees":             taxes,
@@ -375,6 +461,8 @@ class AwardProvider:
             "flight_number":          "",
             "exact_flight_match":     False,
             "retrieved_at_ts":        now_ts,
+            # Date optimization
+            "depart_date":            est_depart_date,
         }
 
 
@@ -436,7 +524,7 @@ class AirfareProvider:
                             segments = itineraries[0].get("segments", [])
                             if segments:
                                 carrier = segments[0].get("carrierCode", "")
-                                airline = carrier  # raw IATA code; map to name below
+                                airline = _IATA_TO_AIRLINE.get(carrier, carrier)
                             raw_dur = itineraries[0].get("duration", "")
                             if raw_dur.startswith("PT"):
                                 raw_dur = raw_dur[2:]

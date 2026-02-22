@@ -2,677 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
-}
-
-body {
-  margin: 0;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  min-height: 100vh;
-  color: #0f172a;
-  background: #f8fbff;
-}
-
-.mobile-shell {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* ——— Hero background layers ——— */
-
-.hero-bg {
+/* ── Background canvas (needs ::before / ::after pseudo-elements) ── */
+.pp-bg {
   position: fixed;
   inset: 0;
-  background-image: url('/bg-polished.webp');
+  z-index: 0;
+  background-image: url('https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=1800&q=85&auto=format&fit=crop');
   background-size: cover;
-  background-position: center;
-  filter: blur(8px) brightness(0.88);
-  transform: scale(1.04);
-  z-index: -3;
+  background-position: center 40%;
 }
-
-.hero-overlay {
-  position: fixed;
+.pp-bg::before {
+  content: '';
+  position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(25, 35, 28, 0.22) 0%, rgba(33, 52, 39, 0.25) 35%, rgba(24, 41, 31, 0.45) 100%);
-  z-index: -2;
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 15, 30, 0.45) 0%,
+    rgba(5, 15, 30, 0.55) 40%,
+    rgba(5, 15, 30, 0.75) 100%
+  );
 }
-
-.hero-overlay-warm {
-  position: fixed;
+.pp-bg::after {
+  content: '';
+  position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(255, 210, 150, 0.15) 0%, rgba(255, 210, 150, 0.05) 50%, rgba(255, 210, 150, 0) 100%);
-  mix-blend-mode: overlay;
-  z-index: -1;
+  background: radial-gradient(ellipse 120% 100% at 50% 50%, transparent 50%, rgba(0, 0, 0, 0.35) 100%);
+  pointer-events: none;
 }
 
-/* ——— Glass card ——— */
-
-.glass {
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 20px;
+/* ── Date input dark color scheme ── */
+input[type='date'] {
+  color-scheme: dark;
 }
 
-
-/* ——— Buttons ——— */
-
-.btn-primary {
-  height: 36px;
-  border-radius: 999px;
-  border: 0;
-  color: #fff;
-  padding: 0 20px;
-  font-weight: 600;
-  font-size: 14px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
-  cursor: pointer;
+/* ── Remove number input spinners ── */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
 }
 
-.btn-secondary {
-  height: 34px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.88);
-  padding: 0 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-pink {
-  height: 48px;
+/* ── Airport combobox — focus-within needs custom shadow ── */
+.pp-airport-wrap {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  border: 0;
-  color: #fff;
-  width: 100%;
-  font-weight: 600;
-  font-size: 15px;
-  background: #ff1973;
-  box-shadow: 0 6px 18px rgba(255, 25, 115, 0.28);
-  cursor: pointer;
-}
-
-.btn-explore {
-  height: 50px;
-  border-radius: 12px;
-  border: none;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
-  width: 100%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.38);
-  cursor: pointer;
-  margin-top: 8px;
-  letter-spacing: 0.01em;
-}
-
-.btn-explore:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-open-playbook {
-  width: 100%;
-  height: 40px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255, 255, 255, 0.88);
-  color: #1e293b;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.btn-open-playbook:hover {
-  background: #fff;
-}
-
-.btn-open-playbook:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* ——— Search panel (dark glass inside hero) ——— */
-
-.search-panel {
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  padding: 20px 22px 22px;
-  margin-top: 22px;
-}
-
-/* Inline top-row select (Round trip · Travelers · Cabin) */
-.s-top-select {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 14px;
-  font-family: inherit;
-  cursor: pointer;
-  outline: none;
-  padding: 1px 4px;
-}
-
-/* Field wrapper */
-.s-field {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Small uppercase label */
-.s-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.7);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 5px;
-}
-
-/* Shared glass input style */
-.s-input {
-  height: 48px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0 14px;
-  font-size: 15px;
-  font-family: inherit;
-  color: #fff;
-  width: 100%;
-  outline: none;
-  transition: border-color 0.15s, background 0.15s;
-  box-sizing: border-box;
-}
-
-.s-input:focus {
-  border-color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.s-input::placeholder {
-  color: rgba(255, 255, 255, 0.28);
-}
-
-/* Shared glass select style */
-.s-select {
-  height: 48px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0 12px;
-  font-size: 14px;
-  font-family: inherit;
-  color: #fff;
-  width: 100%;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  box-sizing: border-box;
-}
-
-.s-select:focus {
-  border-color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* Route row: From | swap | To */
-.s-route-row {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 8px;
-  align-items: end;
-  margin-bottom: 12px;
-}
-
-/* Date + Nights + Max hrs row (4 cols: date | date | nights | hours) */
-.s-date-row {
-  display: grid;
-  grid-template-columns: 1.15fr 1.15fr 0.7fr 0.7fr;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-/* One-way: date | nights | hours */
-.s-date-row.s-date-row-single {
-  grid-template-columns: 1.6fr 0.7fr 0.7fr;
-}
-
-/* Date input — tighter padding so the value fits cleanly */
-.s-input-date {
-  padding: 0 10px;
-  font-size: 14px;
-}
-
-/* Compact number input — centered value */
-.s-input-compact {
-  padding: 0 10px;
-  font-size: 15px;
-  text-align: center;
-}
-
-/* Swap button */
-.s-swap {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 18px;
+  padding: 10px 14px;
+  min-height: 52px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s;
-}
-
-.s-swap:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-/* Collapsible points section toggle */
-.s-collapse-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 10px;
-  cursor: pointer;
-  padding: 12px 14px;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.s-collapse-toggle:hover {
-  background: rgba(255, 255, 255, 0.13);
-  border-color: rgba(255, 255, 255, 0.28);
-}
-
-.s-points-toggle-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.88);
-  letter-spacing: 0.01em;
-}
-
-.s-collapse-chevron {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-/* Points program bucket row */
-.s-bucket-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-/* ——— Airport combobox ——— */
-
-.airport-input-wrap {
-  display: flex;
+  gap: 6px;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-  min-height: 48px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.1);
-  padding: 6px 10px;
-  box-sizing: border-box;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   cursor: text;
 }
-
-.airport-input-wrap:focus-within {
-  border-color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.15);
+.pp-airport-wrap:focus-within {
+  border-color: rgba(139, 191, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(126, 200, 244, 0.15);
 }
 
-.airport-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 6px;
-  padding: 2px 7px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-  white-space: nowrap;
-  line-height: 1.4;
-}
-
-.airport-chip button {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.55);
-  cursor: pointer;
-  padding: 0 0 0 2px;
-  font-size: 15px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-}
-
-.airport-chip button:hover {
-  color: #fff;
-}
-
-.airport-search-input {
-  flex: 1;
-  min-width: 60px;
-  background: none;
-  border: none;
-  outline: none;
-  font-size: 15px;
-  font-family: inherit;
-  color: #fff;
-  padding: 0;
-  line-height: 1.6;
-}
-
-.airport-search-input::placeholder {
-  color: rgba(255, 255, 255, 0.28);
-}
-
-.airport-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  background: rgba(10, 18, 35, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 12px;
-  padding: 5px;
-  z-index: 100;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-}
-
-.airport-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* ── Bare date/number inputs inside field wrappers ── */
+.pp-date-input,
+.pp-num-input {
   width: 100%;
-  padding: 9px 10px;
-  border-radius: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.1s;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  height: 52px;
   font-family: inherit;
-}
-
-.airport-option:hover {
-  background: rgba(255, 255, 255, 0.09);
-}
-
-.airport-option.selected {
-  background: rgba(59, 130, 246, 0.28);
-}
-
-.airport-code {
   font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-  min-width: 38px;
-  flex-shrink: 0;
+  color: #f0f4ff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pp-date-input:focus,
+.pp-num-input:focus {
+  border-color: rgba(139, 191, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(126, 200, 244, 0.15);
+}
+.pp-date-input::placeholder,
+.pp-num-input::placeholder {
+  color: #556070;
 }
 
-.airport-info {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.55);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* ── Explore / Search button ── */
+.pp-explore-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.pp-explore-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.pp-explore-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-/* ——— Option cards ——— */
+/* ── Swap button spin on hover ── */
+.pp-swap-btn {
+  transition: transform 0.2s;
+}
+.pp-swap-btn:hover {
+  transform: rotate(180deg);
+}
 
-.option-card {
+/* ── Result card hover ── */
+.pp-result-card {
+  background: rgba(12, 20, 35, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.13);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 18px;
-}
-
-.option-dest {
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.01em;
-}
-
-.option-dest-code {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.option-route-line {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 3px;
-}
-
-.option-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 99px;
-  background: rgba(59, 130, 246, 0.3);
-  border: 1px solid rgba(59, 130, 246, 0.45);
-  color: rgba(255, 255, 255, 0.9);
-  white-space: nowrap;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
-}
-
-.option-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 10px 0;
-}
-
-.option-price-big {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.01em;
-}
-
-.option-price-unit {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.option-price-sub {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 3px;
-}
-
-.option-cpp-badge {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(74, 222, 128, 0.9);
-  margin-top: 2px;
-}
-
-.cpp-mid {
-  font-weight: 400;
-  color: rgba(74, 222, 128, 0.82);
-}
-
-/* Deal rating badge */
-.deal-rating-badge {
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 4px;
-  padding: 2px 7px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-left: 6px;
-}
-.deal-rating-excellent { background: rgba(20, 83, 45, 0.85);  color: #bbf7d0; }
-.deal-rating-good      { background: rgba(30, 58, 95, 0.85);  color: #93c5fd; }
-.deal-rating-fair      { background: rgba(69, 26, 3, 0.85);   color: #fed7aa; }
-.deal-rating-poor      { background: rgba(28, 25, 23, 0.85);  color: #a8a29e; }
-
-/* Confidence indicator */
-.option-confidence {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.72);
-  margin-top: 3px;
-}
-.confidence-dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.confidence-high   { background: #4ade80; }
-.confidence-medium { background: #facc15; }
-.confidence-low    { background: #f87171; }
-.no-seats-note     { color: rgba(255, 255, 255, 0.6); }
-
-.option-oop {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.65);
-  margin-top: 4px;
-}
-
-/* ——— Playbook ——— */
-
-.playbook-section-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 12px;
-}
-
-.playbook-step {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.88);
-  line-height: 1.5;
-}
-
-.playbook-step-num {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  margin-top: 1px;
-}
-
-/* ——— Deals section ——— */
-
-.deals-shell {
-  background: #f6f6f7;
-  border-radius: 24px;
   padding: 20px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-
-.deals-title {
-  color: #111827;
-  font-size: clamp(26px, 3.8vw, 44px);
-  line-height: 1.06;
-  letter-spacing: -0.02em;
-  font-weight: 600;
-}
-
-.deals-sub {
-  color: #6b7280;
-  font-size: clamp(14px, 1.6vw, 18px);
-  margin-top: 4px;
-}
-
-.deal-card {
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-}
-
-/* ——— Mobile ——— */
-
-@media (max-width: 640px) {
-  .glass {
-    border-radius: 18px;
-  }
-
-  .search-panel {
-    padding: 16px;
-    border-radius: 14px;
-    margin-top: 18px;
-  }
-
-  .s-bucket-row {
-    grid-template-columns: 1fr;
-  }
-
-  .s-route-row {
-    grid-template-columns: 1fr auto 1fr;
-  }
-
-  /* Stack dates on top row, nights/hours on bottom */
-  .s-date-row {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-  }
-
-  .s-date-row.s-date-row-single {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .deals-shell {
-    border-radius: 20px;
-    padding: 16px;
-  }
-
-  .deals-title {
-    font-size: 26px;
-  }
-
-  .deals-sub {
-    font-size: 14px;
-  }
+.pp-result-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }

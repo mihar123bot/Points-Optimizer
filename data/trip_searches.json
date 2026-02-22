@@ -687,6 +687,39 @@
       ]
     }
   },
+  "b76d2d15-ae39-4943-91c2-9e981dc836e7": {
+    "id": "b76d2d15-ae39-4943-91c2-9e981dc836e7",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-15",
+      "date_window_start": "2026-07-01",
+      "duration_nights": 4,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "preferred_destinations": [
+        "CUN"
+      ],
+      "travelers": 1,
+      "vibe_tags": []
+    }
+  },
   "c50fb73c-21b5-41f5-b92a-5cf7fcdb3dd2": {
     "id": "c50fb73c-21b5-41f5-b92a-5cf7fcdb3dd2",
     "payload": {
@@ -864,6 +897,66 @@
       "vibe_tags": [
         "south america"
       ]
+    }
+  },
+  "f2484177-feba-4f68-939a-8fb016a05dc9": {
+    "id": "f2484177-feba-4f68-939a-8fb016a05dc9",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        },
+        {
+          "balance": 100000,
+          "program": "CAP1"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-15",
+      "date_window_start": "2026-07-01",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "preferred_destinations": [],
+      "travelers": 1,
+      "vibe_tags": []
+    }
+  },
+  "f74d7029-2bff-48c0-b591-2f52816e4a6f": {
+    "id": "f74d7029-2bff-48c0-b591-2f52816e4a6f",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-03-31",
+      "date_window_start": "2026-03-29",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "preferred_destinations": [
+        "CUN"
+      ],
+      "travelers": 1,
+      "vibe_tags": []
     }
   }
 }
