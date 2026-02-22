@@ -4,7 +4,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import { createTripSearch, generatePlaybook, generateRecommendations } from '@/lib/api';
 import { PlaybookResponse, RecommendationBundle } from '@/lib/types';
 
-type Step = 'search' | 'options' | 'playbook';
+type Step = 'search' | 'playbook';
 type BackendProgram = 'MR' | 'CAP1' | 'MARRIOTT';
 
 interface Bucket {
@@ -216,7 +216,6 @@ export default function HomePage() {
       });
       const recs = await generateRecommendations(trip.id);
       setBundle(recs);
-      setStep('options');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Request failed');
     } finally {
@@ -267,11 +266,11 @@ export default function HomePage() {
               <span className="text-white font-bold tracking-[-0.025em]" style={{ fontSize: 21 }}>pointpilot</span>
             </div>
             <div className="flex items-center gap-3">
-              {step !== 'search' && (
+              {(bundle || step === 'playbook') && (
                 <div className="hidden sm:flex items-center gap-1 text-xs font-semibold">
                   <span className="text-white/35">Explore</span>
                   <span className="text-white/25 mx-0.5">›</span>
-                  <span className={step === 'options' ? 'text-white' : 'text-white/35'}>Discover</span>
+                  <span className={bundle && step !== 'playbook' ? 'text-white' : 'text-white/35'}>Discover</span>
                   <span className="text-white/25 mx-0.5">›</span>
                   <span className={step === 'playbook' ? 'text-white' : 'text-white/35'}>Capitalize</span>
                 </div>
@@ -283,12 +282,16 @@ export default function HomePage() {
           {/* ——— Search step ——— */}
           {step === 'search' && (
             <>
-              <h1 className="text-white text-[clamp(38px,8vw,68px)] font-bold tracking-[-0.03em] leading-[0.92] max-w-3xl mt-6">
-                Fly smarter<br />with points.
-              </h1>
-              <p className="text-white/60 text-[clamp(15px,1.8vw,19px)] mt-3 font-light tracking-wide">
-                Explore. Discover. Capitalize.
-              </p>
+              {!bundle && (
+                <>
+                  <h1 className="text-white text-[clamp(38px,8vw,68px)] font-bold tracking-[-0.03em] leading-[0.92] max-w-3xl mt-6">
+                    Fly smarter<br />with points.
+                  </h1>
+                  <p className="text-white/60 text-[clamp(15px,1.8vw,19px)] mt-3 font-light tracking-wide">
+                    Explore. Discover. Capitalize.
+                  </p>
+                </>
+              )}
 
               <form onSubmit={onSubmit} className="search-panel">
                 {/* Top row: trip type, traveler count */}
@@ -439,115 +442,114 @@ export default function HomePage() {
                   {loading ? 'Searching...' : 'Explore'}
                 </button>
               </form>
-            </>
-          )}
 
-          {/* ——— Options step ——— */}
-          {step === 'options' && bundle && (
-            <>
-              <div className="mt-6 flex items-center justify-between">
-                <div>
-                  <h2 className="text-white text-2xl font-bold">Flight Options</h2>
-                  <p className="text-white/45 text-xs mt-0.5">
-                    {bundle.options?.[0]?.search_mode === 'cash'
-                      ? 'Sorted by lowest total cost'
-                      : 'Sorted by best points value'}
-                  </p>
-                </div>
-                <button className="btn-secondary" onClick={() => setStep('search')}>
-                  Edit Search
-                </button>
-              </div>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                {bundle.options?.map((o) => {
-                  const isBestBalanced = bundle.winner_tiles?.best_balanced === o.id;
-                  const isBestCpp = !isBestBalanced && bundle.winner_tiles?.best_cpp === o.id;
-                  const isBestPrice = !isBestBalanced && !isBestCpp && bundle.winner_tiles?.best_oop === o.id;
-                  const badge = isBestBalanced ? 'Best Balanced' : isBestCpp ? 'Best CPP' : isBestPrice ? 'Best Price' : null;
-                  const isCash = o.search_mode === 'cash';
-                  const pts = o.points_breakdown?.flight_points;
-                  const taxes = o.award_details?.taxes_fees ?? o.points_breakdown?.taxes_fees;
-                  const cpp = o.points_breakdown?.flight_cpp ?? o.cpp_flight;
+              {bundle && (
+                <>
+                  <div className="mt-6 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-white text-2xl font-bold">Discover</h2>
+                      <p className="text-white/45 text-xs mt-0.5">
+                        {bundle.options?.[0]?.search_mode === 'cash'
+                          ? 'Sorted by lowest total cost'
+                          : 'Sorted by best points value'}
+                      </p>
+                    </div>
+                    <button className="btn-secondary" onClick={() => setBundle(null)}>
+                      New Search
+                    </button>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {bundle.options?.map((o) => {
+                      const isBestBalanced = bundle.winner_tiles?.best_balanced === o.id;
+                      const isBestCpp = !isBestBalanced && bundle.winner_tiles?.best_cpp === o.id;
+                      const isBestPrice = !isBestBalanced && !isBestCpp && bundle.winner_tiles?.best_oop === o.id;
+                      const badge = isBestBalanced ? 'Best Balanced' : isBestCpp ? 'Best CPP' : isBestPrice ? 'Best Price' : null;
+                      const isCash = o.search_mode === 'cash';
+                      const pts = o.points_breakdown?.flight_points;
+                      const taxes = o.award_details?.taxes_fees ?? o.points_breakdown?.taxes_fees;
+                      const cpp = o.points_breakdown?.flight_cpp ?? o.cpp_flight;
 
-                  return (
-                    <article key={o.id} className="option-card">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div>
-                          <div className="option-dest">
-                            {o.city_name || o.destination}
-                            {o.city_name && <span className="option-dest-code"> · {o.destination}</span>}
+                      return (
+                        <article key={o.id} className="option-card">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                              <div className="option-dest">
+                                {o.city_name || o.destination}
+                                {o.city_name && <span className="option-dest-code"> · {o.destination}</span>}
+                              </div>
+                              <div className="option-route-line">
+                                {o.origin} → {o.destination}
+                                {o.airline ? ` · ${o.airline}` : ''}
+                                {o.duration ? ` · ${o.duration}` : ''}
+                              </div>
+                            </div>
+                            {badge && <span className="option-badge">{badge}</span>}
+                            {o.valuation && (
+                              <span className={`deal-rating-badge deal-rating-${o.valuation.deal_rating.toLowerCase()}`}>
+                                {o.valuation.deal_rating}
+                              </span>
+                            )}
                           </div>
-                          <div className="option-route-line">
-                            {o.origin} → {o.destination}
-                            {o.airline ? ` · ${o.airline}` : ''}
-                            {o.duration ? ` · ${o.duration}` : ''}
-                          </div>
-                        </div>
-                        {badge && <span className="option-badge">{badge}</span>}
-                        {o.valuation && (
-                          <span className={`deal-rating-badge deal-rating-${o.valuation.deal_rating.toLowerCase()}`}>
-                            {o.valuation.deal_rating}
-                          </span>
-                        )}
-                      </div>
 
-                      <div className="option-divider" />
+                          <div className="option-divider" />
 
-                      {isCash ? (
-                        <div>
-                          <div className="option-price-big">
-                            ${o.cash_price_pp ? o.cash_price_pp.toFixed(0) : o.oop_total.toFixed(0)}
-                            <span className="option-price-unit">/person</span>
-                          </div>
-                          <div className="option-price-sub">${o.oop_total.toFixed(0)} est. total trip</div>
-                        </div>
-                      ) : (
-                        <div>
-                          {pts ? (
-                            <>
+                          {isCash ? (
+                            <div>
                               <div className="option-price-big">
-                                {pts.toLocaleString()} pts
-                                {taxes ? <span className="option-price-unit"> + ${taxes.toFixed(0)} taxes</span> : ''}
+                                ${o.cash_price_pp ? o.cash_price_pp.toFixed(0) : o.oop_total.toFixed(0)}
+                                <span className="option-price-unit">/person</span>
                               </div>
-                              {o.valuation ? (
-                                <div className="option-cpp-badge">
-                                  {o.valuation.cpp_low.toFixed(1)}–{o.valuation.cpp_high.toFixed(1)}¢/pt
-                                  <span className="cpp-mid"> ({o.valuation.cpp_mid.toFixed(1)}¢ mid)</span>
-                                </div>
-                              ) : (
-                                cpp && <div className="option-cpp-badge">{cpp.toFixed(1)}¢/pt value</div>
-                              )}
-                              {o.valuation && (
-                                <div className="option-confidence">
-                                  <span className={`confidence-dot confidence-${o.valuation.confidence.toLowerCase()}`} />
-                                  {o.valuation.confidence} · {o.valuation.score}/100
-                                  {o.no_award_seats && <span className="no-seats-note"> · estimated</span>}
-                                </div>
-                              )}
-                              <div className="option-price-sub">
-                                vs ${o.cash_price_pp ? o.cash_price_pp.toFixed(0) : '—'} cash/person
-                              </div>
-                            </>
+                              <div className="option-price-sub">${o.oop_total.toFixed(0)} est. total trip</div>
+                            </div>
                           ) : (
-                            <div className="option-price-big">
-                              ${o.oop_total.toFixed(0)}
-                              <span className="option-price-unit"> out of pocket</span>
+                            <div>
+                              {pts ? (
+                                <>
+                                  <div className="option-price-big">
+                                    {pts.toLocaleString()} pts
+                                    {taxes ? <span className="option-price-unit"> + ${taxes.toFixed(0)} taxes</span> : ''}
+                                  </div>
+                                  {o.valuation ? (
+                                    <div className="option-cpp-badge">
+                                      {o.valuation.cpp_low.toFixed(1)}–{o.valuation.cpp_high.toFixed(1)}¢/pt
+                                      <span className="cpp-mid"> ({o.valuation.cpp_mid.toFixed(1)}¢ mid)</span>
+                                    </div>
+                                  ) : (
+                                    cpp && <div className="option-cpp-badge">{cpp.toFixed(1)}¢/pt value</div>
+                                  )}
+                                  {o.valuation && (
+                                    <div className="option-confidence">
+                                      <span className={`confidence-dot confidence-${o.valuation.confidence.toLowerCase()}`} />
+                                      {o.valuation.confidence} · {o.valuation.score}/100
+                                      {o.no_award_seats && <span className="no-seats-note"> · estimated</span>}
+                                    </div>
+                                  )}
+                                  <div className="option-price-sub">
+                                    vs ${o.cash_price_pp ? o.cash_price_pp.toFixed(0) : '—'} cash/person
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="option-price-big">
+                                  ${o.oop_total.toFixed(0)}
+                                  <span className="option-price-unit"> out of pocket</span>
+                                </div>
+                              )}
                             </div>
                           )}
-                        </div>
-                      )}
 
-                      <button
-                        className="btn-open-playbook mt-3"
-                        onClick={() => onChooseOption(o.id)}
-                        disabled={loading}
-                      >
-                        {loading ? 'Loading...' : 'Open Playbook →'}
-                      </button>
-                    </article>
-                  );
-                })}
-              </div>
+                          <button
+                            className="btn-open-playbook mt-3"
+                            onClick={() => onChooseOption(o.id)}
+                            disabled={loading}
+                          >
+                            {loading ? 'Loading...' : 'Open Playbook →'}
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </>
           )}
 
@@ -556,7 +558,7 @@ export default function HomePage() {
             <>
               <div className="mt-6 flex items-center justify-between">
                 <h2 className="text-white text-2xl font-bold">Your Playbook</h2>
-                <button className="btn-secondary" onClick={() => setStep('options')}>
+                <button className="btn-secondary" onClick={() => setStep('search')}>
                   ← Back to Options
                 </button>
               </div>
@@ -588,29 +590,12 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* ——— Deals section (search step only) ——— */}
-        {step === 'search' && (
+        {/* ——— Deals section (pre-search prompt) ——— */}
+        {step === 'search' && !bundle && (
           <section className="deals-shell mt-4">
             <h2 className="deals-title">Discover the best deals</h2>
             <p className="deals-sub">in First, Business, and Economy class</p>
-
-            <div className="deal-card mt-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-xl font-semibold text-slate-900">8:35 AM — 11:45 AM</div>
-                  <div className="text-slate-500 text-sm mt-0.5">Air France · Business</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-slate-900">47,500 pts</div>
-                  <div className="text-slate-500 text-sm mt-0.5">+$86.00 · 1+ Seat</div>
-                </div>
-              </div>
-              <div className="mt-3 text-slate-500 text-sm">Apr 15 · FDF → CAY · 2h 10m · Nonstop</div>
-            </div>
-
-            <div className="mt-4">
-              <button className="btn-pink">View All</button>
-            </div>
+            <p className="text-sm text-gray-400 mt-4">Enter your search above to see real-time award and cash options.</p>
           </section>
         )}
 
