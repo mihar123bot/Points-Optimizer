@@ -172,9 +172,9 @@ body {
 
 /* Small uppercase label */
 .s-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 5px;
@@ -467,12 +467,12 @@ body {
 .option-dest-code {
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .option-route-line {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.48);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 3px;
 }
 
@@ -505,12 +505,12 @@ body {
 .option-price-unit {
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .option-price-sub {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 3px;
 }
 
@@ -523,7 +523,7 @@ body {
 
 .cpp-mid {
   font-weight: 400;
-  color: rgba(74, 222, 128, 0.6);
+  color: rgba(74, 222, 128, 0.82);
 }
 
 /* Deal rating badge */
@@ -546,8 +546,8 @@ body {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
   margin-top: 3px;
 }
 .confidence-dot {
@@ -560,7 +560,7 @@ body {
 .confidence-high   { background: #4ade80; }
 .confidence-medium { background: #facc15; }
 .confidence-low    { background: #f87171; }
-.no-seats-note     { color: rgba(255, 255, 255, 0.35); }
+.no-seats-note     { color: rgba(255, 255, 255, 0.6); }
 
 .option-oop {
   font-size: 14px;
@@ -571,9 +571,9 @@ body {
 /* ——— Playbook ——— */
 
 .playbook-section-title {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.8);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 12px;

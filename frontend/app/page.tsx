@@ -444,7 +444,7 @@ export default function HomePage() {
                   <div className="mt-6 flex items-center justify-between">
                     <div>
                       <h2 className="text-white text-2xl font-bold">Discover</h2>
-                      <p className="text-white/45 text-xs mt-0.5">
+                      <p className="text-white/75 text-sm mt-0.5">
                         {bundle.options?.[0]?.search_mode === 'cash'
                           ? 'Sorted by lowest total cost'
                           : 'Sorted by best points value'}

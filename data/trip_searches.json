@@ -178,6 +178,32 @@
       ]
     }
   },
+  "3c6cf1db-7a31-43ec-b0a6-9d548232e1ba": {
+    "id": "3c6cf1db-7a31-43ec-b0a6-9d548232e1ba",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-03-24",
+      "date_window_start": "2026-03-02",
+      "duration_nights": 5,
+      "origins": [
+        "IAD"
+      ],
+      "preferred_destinations": [],
+      "travelers": 1,
+      "vibe_tags": []
+    }
+  },
   "45f73e4c-c9e5-4181-ac08-065954fa75aa": {
     "id": "45f73e4c-c9e5-4181-ac08-065954fa75aa",
     "payload": {
@@ -212,6 +238,33 @@
       "vibe_tags": [
         "south america"
       ]
+    }
+  },
+  "49390479-dbf8-418d-8020-bc99f1d25e18": {
+    "id": "49390479-dbf8-418d-8020-bc99f1d25e18",
+    "payload": {
+      "balances": [
+        {
+          "balance": 98000,
+          "program": "MR"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-03-10",
+      "date_window_start": "2026-03-02",
+      "duration_nights": 5,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "preferred_destinations": [],
+      "travelers": 1,
+      "vibe_tags": []
     }
   },
   "537c65f4-c045-4199-bac1-3605e6abdafa": {
@@ -390,6 +443,33 @@
       "vibe_tags": [
         "south america"
       ]
+    }
+  },
+  "75f4b6c1-ba69-4f26-ac78-0a303c92ec52": {
+    "id": "75f4b6c1-ba69-4f26-ac78-0a303c92ec52",
+    "payload": {
+      "balances": [
+        {
+          "balance": 100000,
+          "program": "MR"
+        }
+      ],
+      "cabin_preference": "economy",
+      "constraints": {
+        "max_stops": 1,
+        "max_travel_hours": 10.0,
+        "nonstop_preferred": false
+      },
+      "date_window_end": "2026-07-15",
+      "date_window_start": "2026-07-01",
+      "duration_nights": 4,
+      "origins": [
+        "IAD",
+        "DCA"
+      ],
+      "preferred_destinations": [],
+      "travelers": 2,
+      "vibe_tags": []
     }
   },
   "81256368-cca6-4094-8586-a381102c9baa": {

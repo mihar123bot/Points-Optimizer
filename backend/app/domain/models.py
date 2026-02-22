@@ -77,6 +77,8 @@ class RecommendationOption(BaseModel):
     city_name: str = ""               # e.g. "Paris"
     country: str = ""                 # e.g. "France"
     airline: str = ""                 # e.g. "Air France"
+    depart_date: str = ""             # e.g. "2026-07-01"
+    return_date: str = ""             # e.g. "2026-07-05"
     duration: str = ""                # e.g. "7h 50m"
     cash_price_pp: float = 0.0        # cash per person
     # Points details
