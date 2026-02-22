@@ -244,6 +244,10 @@ body {
   margin-bottom: 12px;
 }
 
+.s-date-row.s-date-row-single {
+  grid-template-columns: 1fr;
+}
+
 /* Swap button */
 .s-swap {
   width: 40px;
@@ -271,15 +275,29 @@ body {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
   cursor: pointer;
-  padding: 0;
+  padding: 12px 14px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.s-collapse-toggle:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.s-points-toggle-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 0.01em;
 }
 
 .s-collapse-chevron {
-  font-size: 9px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 /* Points program bucket row */
@@ -287,6 +305,131 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+/* ——— Airport combobox ——— */
+
+.airport-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  min-height: 48px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 10px;
+  box-sizing: border-box;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: text;
+}
+
+.airport-input-wrap:focus-within {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.airport-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.airport-chip button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  padding: 0 0 0 2px;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.airport-chip button:hover {
+  color: #fff;
+}
+
+.airport-search-input {
+  flex: 1;
+  min-width: 60px;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  font-family: inherit;
+  color: #fff;
+  padding: 0;
+  line-height: 1.6;
+}
+
+.airport-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.airport-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: rgba(10, 18, 35, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  padding: 5px;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.airport-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  color: #fff;
+  font-family: inherit;
+}
+
+.airport-option:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.airport-option.selected {
+  background: rgba(59, 130, 246, 0.28);
+}
+
+.airport-code {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  min-width: 38px;
+  flex-shrink: 0;
+}
+
+.airport-info {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ——— Option cards ——— */
@@ -301,10 +444,67 @@ body {
 }
 
 .option-dest {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.option-dest-code {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.option-route-line {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.48);
+  margin-top: 3px;
+}
+
+.option-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.option-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 10px 0;
+}
+
+.option-price-big {
   font-size: 20px;
   font-weight: 700;
   color: #fff;
   letter-spacing: -0.01em;
+}
+
+.option-price-unit {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.option-price-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 3px;
+}
+
+.option-cpp-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(74, 222, 128, 0.9);
+  margin-top: 2px;
 }
 
 .option-oop {

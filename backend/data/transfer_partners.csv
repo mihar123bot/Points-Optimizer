@@ -1,0 +1,25 @@
+program,airline,alliance,amex,chase,capital_one,citi,bilt,wells_fargo
+Aeromexico Rewards,Aeromexico,SkyTeam,1,0,1,1,0,0
+Air Canada Aeroplan,Air Canada,Star Alliance,1,1,1,1,1,0
+Flying Blue,Air France/KLM,SkyTeam,1,1,1,1,1,1
+Alaska Mileage Plan,Alaska,Oneworld,0,0,0,0,1,0
+American AAdvantage,American,Oneworld,0,0,0,0,1,1
+Avianca LifeMiles,Avianca,Star Alliance,1,1,1,1,1,0
+British Airways Avios,British Airways,Oneworld,1,1,1,1,1,1
+Cathay Pacific Asia Miles,Cathay Pacific,Oneworld,1,1,1,1,1,0
+Copa ConnectMiles,Copa,Star Alliance,0,0,1,1,0,0
+Delta SkyMiles,Delta,SkyTeam,1,0,0,0,0,0
+Emirates Skywards,Emirates,None,1,1,1,1,1,1
+Etihad Guest,Etihad,None,1,1,1,1,1,0
+Finnair Plus,Finnair,Oneworld,0,0,1,0,0,0
+Iberia Avios,Iberia,Oneworld,1,1,1,1,1,1
+JetBlue TrueBlue,JetBlue,None,1,1,1,1,1,1
+Lufthansa Miles & More,Lufthansa,Star Alliance,0,0,0,0,1,0
+Qantas Frequent Flyer,Qantas,Oneworld,1,1,1,1,1,1
+Qatar Airways Avios,Qatar,Oneworld,1,1,1,1,1,1
+SAS EuroBonus,SAS,Star Alliance,1,0,1,1,0,0
+Singapore KrisFlyer,Singapore,Star Alliance,1,1,1,1,1,1
+Turkish Miles&Smiles,Turkish,Star Alliance,1,1,1,1,1,0
+United MileagePlus,United,Star Alliance,1,1,1,1,1,0
+Virgin Atlantic Flying Club,Virgin Atlantic,None,1,1,1,1,1,1
+Virgin Australia Velocity,Virgin Australia,None,1,0,1,1,0,0

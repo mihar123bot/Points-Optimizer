@@ -43,6 +43,15 @@ class RecommendationOption(BaseModel):
     score_final: float
     rationale: List[str]
     as_of: str
+    # Rich display fields
+    search_mode: str = "points"       # "points" | "cash"
+    origin: str = ""                  # e.g. "IAD"
+    city_name: str = ""               # e.g. "Paris"
+    country: str = ""                 # e.g. "France"
+    airline: str = ""                 # e.g. "Air France"
+    duration: str = ""                # e.g. "7h 50m"
+    cash_price_pp: float = 0.0        # cash per person
+    # Points details
     points_breakdown: dict = Field(default_factory=dict)
     friction_components: dict = Field(default_factory=dict)
     score_components: dict = Field(default_factory=dict)

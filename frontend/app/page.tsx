@@ -6,12 +6,49 @@ import { PlaybookResponse, RecommendationBundle } from '@/lib/types';
 
 type Step = 'search' | 'options' | 'playbook';
 type BackendProgram = 'MR' | 'CAP1' | 'MARRIOTT';
-type Cabin = 'economy' | 'premium_economy' | 'business' | 'first';
 
 interface Bucket {
   program: string;
   points: number;
 }
+
+interface Airport {
+  code: string;
+  name: string;
+  city: string;
+}
+
+const AIRPORTS: Airport[] = [
+  // DMV
+  { code: 'IAD', name: 'Washington Dulles International', city: 'Washington DC' },
+  { code: 'DCA', name: 'Ronald Reagan Washington National', city: 'Washington DC' },
+  { code: 'BWI', name: 'Baltimore/Washington International', city: 'Baltimore' },
+  // Dallas
+  { code: 'DFW', name: 'Dallas Fort Worth International', city: 'Dallas' },
+  { code: 'DAL', name: 'Dallas Love Field', city: 'Dallas' },
+  // NYC
+  { code: 'JFK', name: 'John F. Kennedy International', city: 'New York' },
+  { code: 'LGA', name: 'LaGuardia', city: 'New York' },
+  { code: 'EWR', name: 'Newark Liberty International', city: 'New York' },
+  // Houston
+  { code: 'IAH', name: 'George Bush Intercontinental', city: 'Houston' },
+  { code: 'HOU', name: 'William P. Hobby', city: 'Houston' },
+  // International
+  { code: 'CUN', name: 'Cancún International', city: 'Cancún' },
+  { code: 'PUJ', name: 'Punta Cana International', city: 'Punta Cana' },
+  { code: 'NAS', name: 'Lynden Pindling International', city: 'Nassau' },
+  { code: 'SJD', name: 'Los Cabos International', city: 'Los Cabos' },
+  { code: 'YVR', name: 'Vancouver International', city: 'Vancouver' },
+  { code: 'EZE', name: 'Ministro Pistarini International', city: 'Buenos Aires' },
+  { code: 'LIM', name: 'Jorge Chávez International', city: 'Lima' },
+  { code: 'CDG', name: 'Charles de Gaulle', city: 'Paris' },
+  { code: 'FCO', name: 'Leonardo da Vinci–Fiumicino', city: 'Rome' },
+  { code: 'LHR', name: 'Heathrow', city: 'London' },
+  { code: 'KEF', name: 'Keflavík International', city: 'Reykjavík' },
+  { code: 'ATH', name: 'Athens International', city: 'Athens' },
+  { code: 'HND', name: 'Tokyo Haneda', city: 'Tokyo' },
+  { code: 'BKK', name: 'Suvarnabhumi', city: 'Bangkok' },
+];
 
 const PROGRAM_OPTIONS = [
   'Amex Membership Rewards',
@@ -43,14 +80,90 @@ function buildBalances(buckets: Bucket[]) {
   );
 }
 
+function AirportCombobox({
+  label,
+  selected,
+  onChange,
+  placeholder = 'City or airport...',
+}: {
+  label: string;
+  selected: string[];
+  onChange: (codes: string[]) => void;
+  placeholder?: string;
+}) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+
+  const filtered = useMemo(() => {
+    if (!query) return [];
+    const q = query.toLowerCase();
+    return AIRPORTS.filter(
+      (a) =>
+        a.code.toLowerCase().startsWith(q) ||
+        a.city.toLowerCase().includes(q) ||
+        a.name.toLowerCase().includes(q)
+    ).slice(0, 7);
+  }, [query]);
+
+  const select = (code: string) => {
+    if (selected.includes(code)) {
+      onChange(selected.filter((c) => c !== code));
+    } else {
+      onChange([...selected, code]);
+    }
+    setQuery('');
+    setOpen(false);
+  };
+
+  const remove = (code: string) => {
+    onChange(selected.filter((c) => c !== code));
+  };
+
+  return (
+    <div className="s-field" style={{ position: 'relative' }}>
+      <label className="s-label">{label}</label>
+      <div className="airport-input-wrap">
+        {selected.map((code) => (
+          <span key={code} className="airport-chip">
+            {code}
+            <button type="button" onClick={() => remove(code)}>×</button>
+          </span>
+        ))}
+        <input
+          className="airport-search-input"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder={selected.length === 0 ? placeholder : ''}
+        />
+      </div>
+      {open && filtered.length > 0 && (
+        <div className="airport-dropdown">
+          {filtered.map((a) => (
+            <button
+              key={a.code}
+              type="button"
+              className={`airport-option${selected.includes(a.code) ? ' selected' : ''}`}
+              onMouseDown={() => select(a.code)}
+            >
+              <span className="airport-code">{a.code}</span>
+              <span className="airport-info">{a.name} · {a.city}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [step, setStep] = useState<Step>('search');
-  const [origins, setOrigins] = useState('IAD, DCA');
-  const [dests, setDests] = useState('');
+  const [originCodes, setOriginCodes] = useState<string[]>(['IAD', 'DCA']);
+  const [destCodes, setDestCodes] = useState<string[]>([]);
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [travelers, setTravelers] = useState(1);
-  const [cabin, setCabin] = useState<Cabin>('economy');
   const [buckets, setBuckets] = useState<Bucket[]>([
     { program: 'Amex Membership Rewards', points: 0 },
     { program: 'Capital One Miles', points: 0 },
@@ -58,24 +171,18 @@ export default function HomePage() {
   ]);
   const [nights, setNights] = useState(5);
   const [hours, setHours] = useState(10);
-  const [pointsOpen, setPointsOpen] = useState(true);
+  const [tripType, setTripType] = useState<'roundtrip' | 'oneway'>('roundtrip');
+  const [pointsOpen, setPointsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [bundle, setBundle] = useState<RecommendationBundle | null>(null);
   const [playbook, setPlaybook] = useState<PlaybookResponse | null>(null);
 
-  const originList = useMemo(
-    () => origins.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
-    [origins]
-  );
-  const destList = useMemo(
-    () => dests.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
-    [dests]
-  );
   const hasPoints = useMemo(() => buckets.some((b) => b.points > 0), [buckets]);
+  const totalPoints = useMemo(() => buckets.reduce((s, b) => s + (b.points || 0), 0), [buckets]);
   const canSearch = useMemo(
-    () => originList.length > 0 && !!start && !!end && hasPoints,
-    [originList, start, end, hasPoints]
+    () => originCodes.length > 0 && !!start && (tripType === 'oneway' || !!end),
+    [originCodes, start, end, tripType]
   );
 
   const updateBucketProgram = (i: number, program: string) =>
@@ -92,14 +199,14 @@ export default function HomePage() {
     setPlaybook(null);
     try {
       const trip = await createTripSearch({
-        origins: originList,
-        preferred_destinations: destList,
+        origins: originCodes,
+        preferred_destinations: destCodes,
         date_window_start: start,
         date_window_end: end,
         duration_nights: nights,
         travelers,
-        vibe_tags: ['warm beach'],
-        cabin_preference: cabin,
+        vibe_tags: [],
+        cabin_preference: 'economy',
         constraints: {
           max_travel_hours: hours,
           max_stops: 1,
@@ -142,7 +249,23 @@ export default function HomePage() {
 
           {/* ——— Nav ——— */}
           <div className="flex items-center justify-between">
-            <div className="text-white text-2xl font-bold tracking-tight">pointpilot</div>
+            <div className="flex items-center gap-2.5">
+              <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                {/* glass ring */}
+                <circle cx="17" cy="17" r="15.5" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2"/>
+                {/* compass rose — N pointer (top, bright) */}
+                <path d="M17 5 L19.4 15 L17 12.8 L14.6 15 Z" fill="white"/>
+                {/* S pointer */}
+                <path d="M17 29 L19.4 19 L17 21.2 L14.6 19 Z" fill="rgba(255,255,255,0.28)"/>
+                {/* E pointer */}
+                <path d="M29 17 L19 14.6 L21.2 17 L19 19.4 Z" fill="rgba(255,255,255,0.28)"/>
+                {/* W pointer */}
+                <path d="M5 17 L15 14.6 L12.8 17 L15 19.4 Z" fill="rgba(255,255,255,0.28)"/>
+                {/* center dot */}
+                <circle cx="17" cy="17" r="2.2" fill="rgba(255,255,255,0.88)"/>
+              </svg>
+              <span className="text-white font-bold tracking-[-0.025em]" style={{ fontSize: 21 }}>pointpilot</span>
+            </div>
             <div className="flex items-center gap-3">
               {step !== 'search' && (
                 <div className="hidden sm:flex items-center gap-1 text-xs font-semibold">
@@ -168,9 +291,16 @@ export default function HomePage() {
               </p>
 
               <form onSubmit={onSubmit} className="search-panel">
-                {/* Top row: trip type, traveler count, cabin */}
+                {/* Top row: trip type, traveler count */}
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
-                  <span className="text-white/75 text-sm font-medium">Round trip</span>
+                  <select
+                    className="s-top-select"
+                    value={tripType}
+                    onChange={(e) => setTripType(e.target.value as 'roundtrip' | 'oneway')}
+                  >
+                    <option value="roundtrip">Round trip</option>
+                    <option value="oneway">One-way</option>
+                  </select>
                   <span className="text-white/25">·</span>
                   <select
                     className="s-top-select"
@@ -181,54 +311,37 @@ export default function HomePage() {
                       <option key={n} value={n}>{n} Traveler{n > 1 ? 's' : ''}</option>
                     ))}
                   </select>
-                  <span className="text-white/25">·</span>
-                  <select
-                    className="s-top-select"
-                    value={cabin}
-                    onChange={(e) => setCabin(e.target.value as Cabin)}
-                  >
-                    <option value="economy">Economy</option>
-                    <option value="premium_economy">Premium Economy</option>
-                    <option value="business">Business</option>
-                    <option value="first">First</option>
-                  </select>
                 </div>
 
                 {/* Route row */}
                 <div className="s-route-row">
-                  <div className="s-field">
-                    <label className="s-label">From</label>
-                    <input
-                      className="s-input"
-                      value={origins}
-                      onChange={(e) => setOrigins(e.target.value.toUpperCase())}
-                      placeholder="IAD, DCA..."
-                    />
-                  </div>
+                  <AirportCombobox
+                    label="From"
+                    selected={originCodes}
+                    onChange={setOriginCodes}
+                    placeholder="City or airport..."
+                  />
                   <button
                     type="button"
                     className="s-swap"
                     onClick={() => {
-                      const tmp = origins;
-                      setOrigins(dests);
-                      setDests(tmp);
+                      const tmp = originCodes;
+                      setOriginCodes(destCodes);
+                      setDestCodes(tmp);
                     }}
                   >
                     ⇄
                   </button>
-                  <div className="s-field">
-                    <label className="s-label">To</label>
-                    <input
-                      className="s-input"
-                      value={dests}
-                      onChange={(e) => setDests(e.target.value.toUpperCase())}
-                      placeholder="Anywhere"
-                    />
-                  </div>
+                  <AirportCombobox
+                    label="To"
+                    selected={destCodes}
+                    onChange={setDestCodes}
+                    placeholder="Anywhere"
+                  />
                 </div>
 
                 {/* Date row */}
-                <div className="s-date-row">
+                <div className={`s-date-row${tripType === 'oneway' ? ' s-date-row-single' : ''}`}>
                   <div className="s-field">
                     <label className="s-label">Depart</label>
                     <input
@@ -238,15 +351,17 @@ export default function HomePage() {
                       onChange={(e) => setStart(e.target.value)}
                     />
                   </div>
-                  <div className="s-field">
-                    <label className="s-label">Return</label>
-                    <input
-                      className="s-input"
-                      type="date"
-                      value={end}
-                      onChange={(e) => setEnd(e.target.value)}
-                    />
-                  </div>
+                  {tripType === 'roundtrip' && (
+                    <div className="s-field">
+                      <label className="s-label">Return</label>
+                      <input
+                        className="s-input"
+                        type="date"
+                        value={end}
+                        onChange={(e) => setEnd(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Nights + Max travel hours */}
@@ -282,7 +397,9 @@ export default function HomePage() {
                     className="s-collapse-toggle"
                     onClick={() => setPointsOpen((v) => !v)}
                   >
-                    <span className="s-label" style={{ marginBottom: 0 }}>Points & Programs</span>
+                    <span className="s-points-toggle-label">
+                      {pointsOpen ? 'Points & Programs' : 'Enter point information'}
+                    </span>
                     <span className="s-collapse-chevron">{pointsOpen ? '▲' : '▼'}</span>
                   </button>
                   {pointsOpen && (
@@ -313,6 +430,11 @@ export default function HomePage() {
                   )}
                 </div>
 
+                <p className="text-xs text-white/40 text-center mb-2 mt-1">
+                  {hasPoints
+                    ? `Optimizing ${totalPoints.toLocaleString()} pts across programs`
+                    : 'Searching best cash fares — enter points to unlock award search'}
+                </p>
                 <button type="submit" className="btn-explore" disabled={!canSearch || loading}>
                   {loading ? 'Searching...' : 'Explore'}
                 </button>
@@ -324,29 +446,88 @@ export default function HomePage() {
           {step === 'options' && bundle && (
             <>
               <div className="mt-6 flex items-center justify-between">
-                <h2 className="text-white text-2xl font-bold">Flight Options</h2>
+                <div>
+                  <h2 className="text-white text-2xl font-bold">Flight Options</h2>
+                  <p className="text-white/45 text-xs mt-0.5">
+                    {bundle.options?.[0]?.search_mode === 'cash'
+                      ? 'Sorted by lowest total cost'
+                      : 'Sorted by best points value'}
+                  </p>
+                </div>
                 <button className="btn-secondary" onClick={() => setStep('search')}>
                   Edit Search
                 </button>
               </div>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                {bundle.options?.map((o) => (
-                  <article key={o.id} className="option-card">
-                    <div className="option-dest">{o.destination}</div>
-                    <div className="option-oop">${o.oop_total?.toFixed(0)} out of pocket</div>
-                    <div className="mt-2 text-sm text-white/55 space-y-0.5">
-                      <div>Score: {o.score_final?.toFixed(3)}</div>
-                      <div>Flight CPP: {o.cpp_flight ?? '—'} · Hotel CPP: {o.cpp_hotel ?? '—'}</div>
-                    </div>
-                    <button
-                      className="btn-open-playbook mt-4"
-                      onClick={() => onChooseOption(o.id)}
-                      disabled={loading}
-                    >
-                      {loading ? 'Loading...' : 'Open Playbook →'}
-                    </button>
-                  </article>
-                ))}
+                {bundle.options?.map((o) => {
+                  const isBestBalanced = bundle.winner_tiles?.best_balanced === o.id;
+                  const isBestCpp = !isBestBalanced && bundle.winner_tiles?.best_cpp === o.id;
+                  const isBestPrice = !isBestBalanced && !isBestCpp && bundle.winner_tiles?.best_oop === o.id;
+                  const badge = isBestBalanced ? 'Best Balanced' : isBestCpp ? 'Best CPP' : isBestPrice ? 'Best Price' : null;
+                  const isCash = o.search_mode === 'cash';
+                  const pts = o.points_breakdown?.flight_points;
+                  const taxes = o.award_details?.taxes_fees ?? o.points_breakdown?.taxes_fees;
+                  const cpp = o.points_breakdown?.flight_cpp ?? o.cpp_flight;
+
+                  return (
+                    <article key={o.id} className="option-card">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                          <div className="option-dest">
+                            {o.city_name || o.destination}
+                            {o.city_name && <span className="option-dest-code"> · {o.destination}</span>}
+                          </div>
+                          <div className="option-route-line">
+                            {o.origin} → {o.destination}
+                            {o.airline ? ` · ${o.airline}` : ''}
+                            {o.duration ? ` · ${o.duration}` : ''}
+                          </div>
+                        </div>
+                        {badge && <span className="option-badge">{badge}</span>}
+                      </div>
+
+                      <div className="option-divider" />
+
+                      {isCash ? (
+                        <div>
+                          <div className="option-price-big">
+                            ${o.cash_price_pp ? o.cash_price_pp.toFixed(0) : o.oop_total.toFixed(0)}
+                            <span className="option-price-unit">/person</span>
+                          </div>
+                          <div className="option-price-sub">${o.oop_total.toFixed(0)} est. total trip</div>
+                        </div>
+                      ) : (
+                        <div>
+                          {pts ? (
+                            <>
+                              <div className="option-price-big">
+                                {pts.toLocaleString()} pts
+                                {taxes ? <span className="option-price-unit"> + ${taxes.toFixed(0)} taxes</span> : ''}
+                              </div>
+                              {cpp && <div className="option-cpp-badge">{cpp.toFixed(1)}¢/pt value</div>}
+                              <div className="option-price-sub">
+                                vs ${o.cash_price_pp ? o.cash_price_pp.toFixed(0) : '—'} cash/person
+                              </div>
+                            </>
+                          ) : (
+                            <div className="option-price-big">
+                              ${o.oop_total.toFixed(0)}
+                              <span className="option-price-unit"> out of pocket</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <button
+                        className="btn-open-playbook mt-3"
+                        onClick={() => onChooseOption(o.id)}
+                        disabled={loading}
+                      >
+                        {loading ? 'Loading...' : 'Open Playbook →'}
+                      </button>
+                    </article>
+                  );
+                })}
               </div>
             </>
           )}
