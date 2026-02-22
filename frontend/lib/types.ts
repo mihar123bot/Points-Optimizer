@@ -1,3 +1,25 @@
+// PRD v1 valuation types
+export type DealRating = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
+export type ConfidenceTier = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export type Valuation = {
+  cpp_mid: number;
+  cpp_low: number;
+  cpp_high: number;
+  deal_rating: DealRating;
+  confidence: ConfidenceTier;
+  score: number;
+};
+
+export type TransferPath = {
+  currency: string;
+  program: string;
+  ratio: number;
+  promo_bonus_percent: number;
+  effective_points: number;
+  transfer_time_minutes: number;
+};
+
 export type TripSearchPayload = {
   origins: string[];
   preferred_destinations?: string[];
@@ -55,6 +77,10 @@ export type RecommendationOption = {
     flight_cpp?: number;
     flight_program?: string;
   };
+  // PRD v1 additions
+  valuation?: Valuation;
+  transfer_paths?: TransferPath[];
+  no_award_seats?: boolean;
 };
 
 export type RecommendationBundle = {

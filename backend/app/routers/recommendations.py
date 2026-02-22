@@ -2,9 +2,11 @@ from datetime import datetime, timezone
 import time
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.domain.models import RecommendationBundle, RecommendationOption
+from app.domain.models import RecommendationBundle, RecommendationOption, TransferPath
 from app.services.scoring import blended_score
 from app.services.recommender import generate_destination_candidates
+from app.services.valuation import compute_cpp_range, compute_confidence, build_valuation
+from app.services.transfer_graph import build_transfer_paths
 from app.store import load_trip_searches, load_recommendations, save_recommendations
 from app.adapters.providers import AwardProvider, AirfareProvider, HotelProvider
 
@@ -166,7 +168,8 @@ def generate_recommendations(req: GenerateRequest):
 
         else:
             # Points mode: optimize award redemption vs cash
-            award = award_provider.search(origin, destination, travelers, cabin=cabin)
+            award = award_provider.search(origin, destination, travelers, cabin=cabin,
+                                          depart_date=depart_date, return_date=return_date)
             flight_points_required = int(award["points_cost"])
             taxes_fees = float(award["taxes_fees"])
             award_mode = "LIVE" if award.get("source") == "seats_aero_live" else "ESTIMATED"
@@ -234,6 +237,35 @@ def generate_recommendations(req: GenerateRequest):
                 "source_label": award.get("source", "unknown"),
                 "source_url": award.get("source_url", ""),
             }
+
+            # ── PRD v1: CPP range + Valuation + Confidence ───────────────────────
+            award_source = award.get("source", "award_estimator_mvp")
+            age_seconds = time.time() - float(award.get("retrieved_at_ts", time.time()))
+            exact_match = bool(award.get("exact_flight_match", False))
+
+            cpp_range = compute_cpp_range(
+                cash_price=cash_flight,
+                points_cost=flight_points_required,
+                taxes_fees=taxes_fees,
+                source=award_source,
+            )
+            conf_score, conf_tier = compute_confidence(
+                last_seen_seconds_ago=age_seconds,
+                exact_flight_match=exact_match,
+                tax_confidence=cpp_range.tax_confidence,
+                award_source=award_source,
+            )
+            valuation_obj = build_valuation(cpp_range, conf_score, conf_tier)
+
+            # ── PRD v1: Transfer paths ────────────────────────────────────────
+            transfer_paths_raw = build_transfer_paths(
+                airline=airline,
+                user_balances=balances,
+                points_needed=flight_points_required,
+            )
+            transfer_path_models = [TransferPath(**p) for p in transfer_paths_raw]
+
+            no_award_seats = award_source == "award_estimator_mvp"
 
             rec_store[option_id] = {
                 "option_id": option_id,
@@ -329,6 +361,11 @@ def generate_recommendations(req: GenerateRequest):
                         if (cash_flights_mode == "LIVE" or cash_hotels_mode == "LIVE" or award_mode == "LIVE")
                         else "fallback"
                     ),
+                    # PRD v1 additions
+                    cpp_range=cpp_range,
+                    valuation=valuation_obj,
+                    transfer_paths=transfer_path_models,
+                    no_award_seats=no_award_seats,
                 )
             )
 

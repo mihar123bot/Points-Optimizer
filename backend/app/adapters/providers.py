@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from datetime import datetime, timezone
 from typing import Any
 
@@ -130,11 +131,46 @@ PROGRAM_CPP: dict[str, dict[str, float]] = {
 }
 
 
+SEATS_AERO_SEARCH_URL = "https://seats.aero/partnerapi/search"
+SEATS_AERO_TRIPS_URL  = "https://seats.aero/partnerapi/trips"
+
+_token_cache: dict[str, Any] = {"token": None, "expires_at": 0.0}
+
+# Per-source provider caches (TTLs per PRD §11)
+_AWARD_CACHE: dict[str, tuple[float, dict]] = {}
+_AIRFARE_CACHE: dict[str, tuple[float, dict]] = {}
+_AWARD_CACHE_TTL   = 7200    # 2 hours — Seats.aero
+_AIRFARE_CACHE_TTL = 43200   # 12 hours — Amadeus flights
+
+# Seats.aero source → human-readable program name mapping (partial)
+_SEATS_SOURCE_TO_PROGRAM: dict[str, str] = {
+    "aeroplan":       "Air Canada Aeroplan",
+    "flyingblue":     "Flying Blue",
+    "united":         "United MileagePlus",
+    "delta":          "Delta SkyMiles",
+    "american":       "American AAdvantage",
+    "jetblue":        "JetBlue TrueBlue",
+    "alaska":         "Alaska Mileage Plan",
+    "lifemiles":      "Avianca LifeMiles",
+    "britishairways": "British Airways Avios",
+    "ana":            "ANA Mileage Club",
+    "virginatlantic": "Virgin Atlantic Flying Club",
+    "singapore":      "Singapore KrisFlyer",
+    "turkish":        "Turkish Miles&Smiles",
+    "emirates":       "Emirates Skywards",
+    "qantas":         "Qantas Frequent Flyer",
+    "qatar":          "Qatar Airways Avios",
+}
+
+
 def _amadeus_token() -> str | None:
     cid = os.getenv("AMADEUS_CLIENT_ID")
     csec = os.getenv("AMADEUS_CLIENT_SECRET")
     if not cid or not csec:
         return None
+    # Return cached token if it has more than 60 seconds left
+    if _token_cache["token"] and time.time() < _token_cache["expires_at"] - 60:
+        return _token_cache["token"]
     try:
         r = requests.post(
             AMADEUS_AUTH_URL,
@@ -146,93 +182,199 @@ def _amadeus_token() -> str | None:
             timeout=12,
         )
         r.raise_for_status()
-        return r.json().get("access_token")
+        data = r.json()
+        token = data.get("access_token")
+        expires_in = int(data.get("expires_in", 1799))
+        _token_cache["token"] = token
+        _token_cache["expires_at"] = time.time() + expires_in
+        return token
     except Exception:
         return None
 
 
 class AwardProvider:
-    """Award inventory: tries configured live source, then falls back to per-route estimator."""
+    """Award inventory: tries Seats.aero live API, then falls back to per-route estimator."""
 
-    def search(self, origin: str, destination: str, travelers: int, cabin: str = "economy") -> dict[str, Any]:
+    def search(
+        self,
+        origin: str,
+        destination: str,
+        travelers: int,
+        cabin: str = "economy",
+        depart_date: str = "",
+        return_date: str = "",
+    ) -> dict[str, Any]:
         now = _now()
+        now_ts = time.time()
         route = ROUTE_DATA.get(destination, {})
         seed = hash(origin + destination)
 
+        # Map cabin to Seats.aero response field prefix (Y/W/J/F)
+        cabin_prefix_map = {
+            "economy": "Y", "premium_economy": "W", "business": "J", "first": "F",
+        }
+        cabin_prefix = cabin_prefix_map.get(cabin, "Y")
+
         seats_key = os.getenv("SEATS_AERO_API_KEY")
-        seats_url = os.getenv("SEATS_AERO_URL", "").strip()
-        if seats_key and seats_url:
+        if seats_key and depart_date:
+            cache_key = f"{origin}:{destination}:{cabin_prefix}:{depart_date}"
+            cached = _AWARD_CACHE.get(cache_key)
+            if cached and (now_ts - cached[0]) < _AWARD_CACHE_TTL:
+                return cached[1]
+
             try:
                 r = requests.get(
-                    seats_url,
+                    SEATS_AERO_SEARCH_URL,
                     params={
-                        "origin": origin,
-                        "destination": destination,
-                        "cabin": cabin,
-                        "pax": max(1, int(travelers)),
+                        "origin_airport":      origin,
+                        "destination_airport": destination,
+                        "start_date":          depart_date,
+                        "end_date":            return_date or depart_date,
                     },
-                    headers={"Authorization": f"Bearer {seats_key}"},
+                    headers={"Partner-Authorization": seats_key},
                     timeout=15,
                 )
                 r.raise_for_status()
                 payload = r.json()
-                items = payload.get("data", payload if isinstance(payload, list) else [])
-                if items:
-                    first = items[0]
-                    points = int(first.get("points", first.get("miles", 0)) or 0)
-                    taxes = float(first.get("taxes", first.get("taxes_fees", 0)) or 0)
+                items = payload.get("data", [])
+
+                # Filter to items with availability for the requested cabin
+                avail_field = f"{cabin_prefix}Available"
+                cost_field  = f"{cabin_prefix}MileageCostRaw"
+                tax_field   = f"{cabin_prefix}TotalTaxesRaw"
+
+                available_items = [
+                    x for x in items
+                    if x.get(avail_field) is True
+                    and (x.get(cost_field) or 0) > 0
+                    # Only trust USD taxes
+                    and x.get("TaxesCurrency", "USD") == "USD"
+                ]
+
+                # Fall back to any cabin if preferred cabin unavailable
+                if not available_items:
+                    available_items = [
+                        x for x in items
+                        if (x.get("YAvailable") or x.get("JAvailable") or x.get("WAvailable") or x.get("FAvailable"))
+                        and x.get("TaxesCurrency", "USD") == "USD"
+                    ]
+                    # Re-map to economy prefix if falling back
+                    if available_items:
+                        cabin_prefix = "Y"
+                        cost_field   = "YMileageCostRaw"
+                        tax_field    = "YTotalTaxesRaw"
+
+                if available_items:
+                    # Pick cheapest by mileage cost for requested cabin
+                    best = min(available_items, key=lambda x: int(x.get(cost_field) or 999_999_999))
+
+                    points = int(best.get(cost_field) or 0)
+                    # Taxes stored in cents in Seats.aero response
+                    taxes_raw = best.get(tax_field) or 0
+                    taxes = round(float(taxes_raw) / 100.0, 2)
+
+                    src_program = str(best.get("Source") or "")
+                    program_label = _SEATS_SOURCE_TO_PROGRAM.get(src_program.lower(), src_program.upper() or "MR")
+
+                    # Use UpdatedAt for data freshness
+                    updated_at_str = best.get("UpdatedAt", "")
+                    retrieved_at_ts = now_ts
+                    if updated_at_str:
+                        try:
+                            dt = datetime.fromisoformat(updated_at_str.replace("Z", "+00:00"))
+                            retrieved_at_ts = dt.timestamp()
+                        except Exception:
+                            pass
+
+                    # Extract operating airline from YAirlines field (comma-sep IATA codes)
+                    airlines_str = str(best.get("YAirlines") or "")
+                    operating_carrier = airlines_str.split(",")[0].strip() if airlines_str else ""
+
+                    # Optionally fetch flight-level data for exact matching
+                    avail_id = best.get("ID") or ""
+                    flight_number = ""
+                    exact_match = False
+                    if avail_id:
+                        try:
+                            tr = requests.get(
+                                SEATS_AERO_TRIPS_URL,
+                                params={"id": avail_id},
+                                headers={"Partner-Authorization": seats_key},
+                                timeout=10,
+                            )
+                            tr.raise_for_status()
+                            trips = tr.json()
+                            segs = trips if isinstance(trips, list) else trips.get("data", [])
+                            if segs:
+                                first_seg = segs[0]
+                                flight_number = str(first_seg.get("FlightNumber") or "")
+                                if not operating_carrier:
+                                    operating_carrier = str(first_seg.get("OperatingCarrier") or "")
+                                exact_match = bool(flight_number)
+                        except Exception:
+                            pass
+
                     if points > 0:
-                        return {
-                            "points_cost": points,
-                            "taxes_fees": taxes,
-                            "program": str(first.get("program", "MR")),
-                            "availability_indicator": str(first.get("availability", "available")),
-                            "source_url": str(first.get("url", seats_url)),
-                            "retrieved_at": now,
-                            "as_of": now,
-                            "source": "seats_aero_live",
-                            "airline": route.get("airlines", [""])[0],
-                            "duration": route.get("duration", ""),
-                            "city_name": route.get("city", destination),
+                        result = {
+                            "points_cost":            points,
+                            "taxes_fees":             taxes,
+                            "program":                program_label,
+                            "availability_indicator": "available",
+                            "source_url":             "",
+                            "retrieved_at":           now,
+                            "as_of":                  now,
+                            "source":                 "seats_aero_live",
+                            "airline":                operating_carrier or route.get("airlines", [""])[0],
+                            "duration":               route.get("duration", ""),
+                            "city_name":              route.get("city", destination),
+                            # Matching metadata (PRD §6 / confidence scoring)
+                            "operating_carrier":      operating_carrier,
+                            "flight_number":          flight_number,
+                            "exact_flight_match":     exact_match,
+                            "retrieved_at_ts":        retrieved_at_ts,
                         }
+                        _AWARD_CACHE[cache_key] = (now_ts, result)
+                        return result
             except Exception:
                 pass
 
-        # Per-route estimator: derive points from cash price ÷ target CPP
+        # ── Per-route estimator (fallback) ────────────────────────────────────
         cabin_key = cabin if cabin in ("economy", "premium_economy", "business", "first") else "economy"
         target_cpp = PROGRAM_CPP["MR"].get(cabin_key, 1.7)
 
         cash_pp_base = route.get("cash_pp_base", 400)
-        cash_pp_var = max(1, route.get("cash_pp_range", 150))
-        est_cash_pp = cash_pp_base + (abs(seed) % cash_pp_var)
+        cash_pp_var  = max(1, route.get("cash_pp_range", 150))
+        est_cash_pp  = cash_pp_base + (abs(seed) % cash_pp_var)
 
         taxes_base = route.get("taxes_base", 80)
-        taxes_var = max(1, route.get("taxes_range", 40))
+        taxes_var  = max(1, route.get("taxes_range", 40))
         taxes = float(taxes_base + (abs(seed) % taxes_var))
 
-        # Points = (cash value - taxes) / target_cpp * 100
         pts = int((est_cash_pp - taxes) / target_cpp * 100)
 
-        # Sanity-clamp against the hardcoded award chart values
-        pts_key = "pts_business" if cabin in ("business", "first") else "pts_economy"
+        pts_key   = "pts_business" if cabin in ("business", "first") else "pts_economy"
         chart_pts = route.get(pts_key, pts)
-        # Blend estimator with chart (weighted toward chart for known routes)
-        pts = int(pts * 0.4 + chart_pts * 0.6) if chart_pts else pts
+        pts       = int(pts * 0.4 + chart_pts * 0.6) if chart_pts else pts
 
         airline = _pick(route.get("airlines", ["United"]), seed)
 
         return {
-            "points_cost": max(10000, pts),
-            "taxes_fees": taxes,
-            "program": "MR",
+            "points_cost":            max(10000, pts),
+            "taxes_fees":             taxes,
+            "program":                "MR",
             "availability_indicator": "estimated",
-            "source_url": "",
-            "retrieved_at": now,
-            "as_of": now,
-            "source": "award_estimator_mvp",
-            "airline": airline,
-            "duration": route.get("duration", ""),
-            "city_name": route.get("city", destination),
+            "source_url":             "",
+            "retrieved_at":           now,
+            "as_of":                  now,
+            "source":                 "award_estimator_mvp",
+            "airline":                airline,
+            "duration":               route.get("duration", ""),
+            "city_name":              route.get("city", destination),
+            # Matching metadata (empty for estimator)
+            "operating_carrier":      "",
+            "flight_number":          "",
+            "exact_flight_match":     False,
+            "retrieved_at_ts":        now_ts,
         }
 
 
@@ -246,8 +388,14 @@ class AirfareProvider:
         return_date: str,
     ) -> dict[str, Any]:
         now = _now()
+        now_ts = time.time()
         route = ROUTE_DATA.get(destination, {})
         seed = hash(origin + destination)
+
+        cache_key = f"{origin}:{destination}:{depart_date}:{travelers}"
+        cached = _AIRFARE_CACHE.get(cache_key)
+        if cached and (now_ts - cached[0]) < _AIRFARE_CACHE_TTL:
+            return cached[1]
 
         token = _amadeus_token()
         if token:
@@ -296,7 +444,7 @@ class AirfareProvider:
                                 m = raw_dur.split("H")[-1].replace("M", "") if "M" in raw_dur else "0"
                                 duration_str = f"{h}h {m}m"
                         price_pp = round(best_price / max(travelers, 1), 2)
-                        return {
+                        result = {
                             "cash_price_total": best_price,
                             "cash_price_pp": price_pp,
                             "airline": airline or route.get("airlines", [""])[0],
@@ -306,6 +454,8 @@ class AirfareProvider:
                             "as_of": now,
                             "source": "amadeus_test",
                         }
+                        _AIRFARE_CACHE[cache_key] = (now_ts, result)
+                        return result
             except Exception:
                 pass
 

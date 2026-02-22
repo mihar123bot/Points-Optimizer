@@ -484,6 +484,11 @@ export default function HomePage() {
                           </div>
                         </div>
                         {badge && <span className="option-badge">{badge}</span>}
+                        {o.valuation && (
+                          <span className={`deal-rating-badge deal-rating-${o.valuation.deal_rating.toLowerCase()}`}>
+                            {o.valuation.deal_rating}
+                          </span>
+                        )}
                       </div>
 
                       <div className="option-divider" />
@@ -504,7 +509,21 @@ export default function HomePage() {
                                 {pts.toLocaleString()} pts
                                 {taxes ? <span className="option-price-unit"> + ${taxes.toFixed(0)} taxes</span> : ''}
                               </div>
-                              {cpp && <div className="option-cpp-badge">{cpp.toFixed(1)}¢/pt value</div>}
+                              {o.valuation ? (
+                                <div className="option-cpp-badge">
+                                  {o.valuation.cpp_low.toFixed(1)}–{o.valuation.cpp_high.toFixed(1)}¢/pt
+                                  <span className="cpp-mid"> ({o.valuation.cpp_mid.toFixed(1)}¢ mid)</span>
+                                </div>
+                              ) : (
+                                cpp && <div className="option-cpp-badge">{cpp.toFixed(1)}¢/pt value</div>
+                              )}
+                              {o.valuation && (
+                                <div className="option-confidence">
+                                  <span className={`confidence-dot confidence-${o.valuation.confidence.toLowerCase()}`} />
+                                  {o.valuation.confidence} · {o.valuation.score}/100
+                                  {o.no_award_seats && <span className="no-seats-note"> · estimated</span>}
+                                </div>
+                              )}
                               <div className="option-price-sub">
                                 vs ${o.cash_price_pp ? o.cash_price_pp.toFixed(0) : '—'} cash/person
                               </div>

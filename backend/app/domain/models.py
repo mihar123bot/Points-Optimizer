@@ -2,6 +2,34 @@ from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 
 Cabin = Literal["economy", "premium_economy", "business", "first"]
+DealRating = Literal["EXCELLENT", "GOOD", "FAIR", "POOR"]
+ConfidenceTier = Literal["HIGH", "MEDIUM", "LOW"]
+TaxConfidence = Literal["HIGH", "MEDIUM", "LOW"]
+
+
+class CPPRange(BaseModel):
+    cpp_mid: float
+    cpp_low: float
+    cpp_high: float
+    tax_confidence: TaxConfidence
+
+
+class Valuation(BaseModel):
+    cpp_mid: float
+    cpp_low: float
+    cpp_high: float
+    deal_rating: DealRating
+    confidence: ConfidenceTier
+    score: int  # 0–100
+
+
+class TransferPath(BaseModel):
+    currency: str                    # e.g. "MR", "CAP1"
+    program: str                     # e.g. "Air Canada Aeroplan"
+    ratio: float                     # 1.0 = 1:1
+    promo_bonus_percent: float = 0.0
+    effective_points: int            # balance * ratio * (1 + promo/100)
+    transfer_time_minutes: int       # 0 = instant
 
 
 class Constraints(BaseModel):
@@ -67,6 +95,11 @@ class RecommendationOption(BaseModel):
     source_timestamps: dict = Field(default_factory=dict)
     source_labels: dict = Field(default_factory=dict)
     api_mode: str = "fallback"
+    # PRD v1 additions
+    cpp_range: Optional[CPPRange] = None
+    valuation: Optional[Valuation] = None
+    transfer_paths: List[TransferPath] = Field(default_factory=list)
+    no_award_seats: bool = False
 
 
 class RecommendationBundle(BaseModel):
